@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// default server address
 	defaultServerAddress = "127.0.0.1:8000"
 
 	// Time allowed to write a message to the peer
