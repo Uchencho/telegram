@@ -39,6 +39,7 @@ func init() {
 func main() {
 
 	defer db.Db.Close()
+	db.MigrateDB(db.Db)
 
 	hub := ws.NewHub()
 	go hub.Run()
