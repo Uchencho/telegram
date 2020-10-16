@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -22,7 +23,7 @@ func databaseURL() string {
 	return mysql_conn
 }
 
-func ConnectDatabase(*sql.DB) *sql.DB {
+func ConnectDatabase() *sql.DB {
 	db, err := sql.Open("mysql", databaseURL())
 	if err != nil {
 		log.Fatalf("Failed to connect to database with error, %s", err)
@@ -35,3 +36,5 @@ func ConnectDatabase(*sql.DB) *sql.DB {
 	fmt.Println("Connected successfully")
 	return db
 }
+
+var Db = ConnectDatabase()

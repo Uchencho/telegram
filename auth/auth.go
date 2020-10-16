@@ -15,6 +15,7 @@ var (
 	// refreshSigningKey = []byte(os.Getenv("REFRESH_SIGNING_KEY"))
 )
 
+// Checks the accessToken for authenticity
 func checkAccessToken(accessToken string) (interface{}, error) {
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -33,6 +34,7 @@ func checkAccessToken(accessToken string) (interface{}, error) {
 	return "", errors.New("Credentials not provided")
 }
 
+// Middleware that returns the details of the user
 func UserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
