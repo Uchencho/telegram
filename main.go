@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Uchencho/telegram/db"
-	"github.com/Uchencho/telegram/server"
+	"github.com/Uchencho/telegram/server/ws"
 
 	"github.com/joho/godotenv"
 )
@@ -40,12 +40,12 @@ func main() {
 
 	defer db.Db.Close()
 
-	hub := server.NewHub()
+	hub := ws.NewHub()
 	go hub.Run()
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
-		server.ChatServer(hub, w, req)
+		ws.ChatServer(hub, w, req)
 	})
 
 	if err := http.ListenAndServe(defaultServerAddress, nil); err != http.ErrServerClosed {
