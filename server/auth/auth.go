@@ -1,14 +1,31 @@
 package auth
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
+
+type User struct {
+	ID             uint           `json:"id"`
+	Email          string         `json:"email"`
+	HashedPassword string         `json:"password"`
+	FirstName      sql.NullString `json:"first_name"`
+	PhoneNumber    sql.NullString `json:"phone_number"`
+	UserAddress    sql.NullString `json:"user_address"`
+	IsActive       bool           `json:"is_active"`
+	DateJoined     time.Time      `json:"date_joined"`
+	LastLogin      sql.NullTime   `json:"last_login"`
+	Longitude      sql.NullString `json:"longitude"`
+	Latitude       sql.NullString `json:"latitude"`
+	DeviceID       sql.NullString `json:"device_id"`
+}
 
 var (
 	signingKey = []byte(os.Getenv("SIGNING_KEY"))
