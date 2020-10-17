@@ -14,6 +14,11 @@ var (
 	validate = validator.New()
 )
 
+type SuccessResponse struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 func InvalidJsonResp(w http.ResponseWriter, err error) {
 	log.Printf("error in decoding json: %v", err)
 	w.WriteHeader(http.StatusBadRequest)

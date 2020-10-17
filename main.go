@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Uchencho/telegram/db"
+	"github.com/Uchencho/telegram/server/account"
+	"github.com/Uchencho/telegram/server/auth"
 	"github.com/Uchencho/telegram/server/ws"
 
 	"github.com/joho/godotenv"
@@ -45,6 +47,7 @@ func main() {
 	go hub.Run()
 
 	http.HandleFunc("/", serveHome)
+	http.Handle("/register", auth.BasicToken(http.HandlerFunc(account.Register)))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
 		ws.ChatServer(hub, w, req)
 	})
