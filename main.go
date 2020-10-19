@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -40,14 +41,17 @@ func init() {
 
 func main() {
 
-	defer db.Db.Close()
-	db.MigrateDB(db.Db)
+	defer func() {
+		db.Db.Close()
+		fmt.Println("Db closed")
+	}()
+	// db.MigrateDB(db.Db)
 
 	hub := ws.NewHub()
 	go hub.Run()
 
 	http.HandleFunc("/", serveHome)
-	http.Handle("/register", auth.BasicToken(http.HandlerFunc(account.Register)))
+	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
 		ws.ChatServer(hub, w, req)
 	})

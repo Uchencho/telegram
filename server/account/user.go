@@ -3,7 +3,6 @@ package account
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -19,7 +18,6 @@ func Register(w http.ResponseWriter, req *http.Request) {
 
 		var (
 			userPayload auth.RegisterUser
-			user        auth.User
 			err         error
 		)
 
@@ -39,10 +37,13 @@ func Register(w http.ResponseWriter, req *http.Request) {
 			utils.InvalidJsonResp(w, err)
 			return
 		}
+		user := auth.User{
+			Email:      userPayload.Email,
+			DateJoined: time.Now(),
+			LastLogin:  time.Now(),
+			IsActive:   true,
+		}
 
-		user.Email = userPayload.Email
-		user.DateJoined = time.Now()
-		user.LastLogin = time.Now()
 		user.HashedPassword, err = auth.HashPassword(userPayload.Password)
 		if err != nil {
 			utils.InternalIssues(w)
@@ -51,7 +52,6 @@ func Register(w http.ResponseWriter, req *http.Request) {
 
 		err = AddRecordToUserTable(db.Db, user)
 		if err != nil {
-			log.Printf("Error occured in adding details to db, %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, `{"error" : "User already exists, please login"}`)
 			return
