@@ -1,12 +1,16 @@
 package auth
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Uchencho/telegram/db"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -34,6 +38,8 @@ type User struct {
 	DeviceID       string    `json:"device_id"`
 }
 
+type Key string
+
 const (
 	frontEndOrigin string = "*"
 )
@@ -56,6 +62,39 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err
+}
+
+// retrieves the user details for an endpoint to use. Middleware things
+func getUser(db *sql.DB, email string) (User, error) {
+	query := `SELECT id, email, first_name, phone_number, user_address, 
+	is_active, date_joined, last_login, hashed_password FROM Users WHERE email = ?;`
+
+	prep, err := db.Prepare(query)
+	if err != nil {
+		return User{}, err
+	}
+
+	row := prep.QueryRow(email)
+	var (
+		user User
+		add  interface{}
+	)
+
+	switch err := row.Scan(&user.ID, &user.Email, &user.FirstName,
+		&user.PhoneNumber, &add, &user.IsActive,
+		&user.DateJoined, &user.LastLogin, &user.HashedPassword); err {
+	case sql.ErrNoRows:
+		return User{}, err
+	case nil:
+		if add == nil {
+			user.UserAddress = ""
+		} else {
+			user.UserAddress = fmt.Sprint(add)
+		}
+		return user, err
+	default:
+		return User{}, err
+	}
 }
 
 // Generates an acess and refresh token on authentication
@@ -155,7 +194,7 @@ func UserMiddleware(next http.Handler) http.Handler {
 			}
 
 			accessToken := strings.Split(req.Header["Authorization"][0], " ")[1]
-			_, err := checkAccessToken(accessToken)
+			email, err := checkAccessToken(accessToken)
 			if err != nil && "Token is expired" == err.Error() {
 				w.WriteHeader(http.StatusUnauthorized)
 				fmt.Fprint(w, `{"error" : "Token has expired please login"}`)
@@ -167,11 +206,20 @@ func UserMiddleware(next http.Handler) http.Handler {
 			}
 
 			// Retrieve the user and pass it into a context, to do!
+			user, err := getUser(db.Db, fmt.Sprint(email))
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "User does not exist"}`)
+				return
+			}
+
+			const userKey Key = "user"
+			ctx := context.WithValue(req.Context(), userKey, user)
 
 			//Allow CORS here By or specific origin
 			w.Header().Set("Access-Control-Allow-Origin", frontEndOrigin)
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-			next.ServeHTTP(w, req)
+			next.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
 		w.WriteHeader(http.StatusForbidden)

@@ -47,15 +47,13 @@ func main() {
 	}()
 	// db.MigrateDB(db.Db)
 
-	hub := ws.NewHub()
-	go hub.Run()
-
 	http.HandleFunc("/", serveHome)
 	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
 	http.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
-	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
-		ws.ChatServer(hub, w, req)
-	})
+	http.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
+	// http.HandleFunc("/ws", auth.UserMiddleware(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	// 	ws.ChatServer(w, req)
+	// })))
 
 	if err := http.ListenAndServe(defaultServerAddress, nil); err != http.ErrServerClosed {
 		log.Println(err)
