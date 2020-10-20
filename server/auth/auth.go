@@ -34,6 +34,10 @@ type User struct {
 	DeviceID       string    `json:"device_id"`
 }
 
+const (
+	frontEndOrigin string = "*"
+)
+
 var (
 	signingKey        = []byte(os.Getenv("SIGNING_KEY"))
 	refreshSigningKey = []byte(os.Getenv("REFRESH_SIGNING_KEY"))
@@ -46,6 +50,12 @@ func HashPassword(password string) (string, error) {
 	}
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 4)
 	return string(bytes), err
+}
+
+// Checks the password and the hash, returns a non nil error if not the same
+func CheckPasswordHash(password, hash string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err
 }
 
 // Generates an acess and refresh token on authentication
@@ -115,6 +125,10 @@ func BasicToken(next http.Handler) http.Handler {
 			accessToken := strings.Split(r.Header["Authorization"][0], " ")[1]
 			basic_token := os.Getenv("BASIC_TOKEN")
 			if basic_token == accessToken {
+
+				//Allow CORS here By or specific origin
+				w.Header().Set("Access-Control-Allow-Origin", frontEndOrigin)
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 				next.ServeHTTP(w, r)
 				return
 			} else {
@@ -154,6 +168,9 @@ func UserMiddleware(next http.Handler) http.Handler {
 
 			// Retrieve the user and pass it into a context, to do!
 
+			//Allow CORS here By or specific origin
+			w.Header().Set("Access-Control-Allow-Origin", frontEndOrigin)
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 			next.ServeHTTP(w, req)
 			return
 		}

@@ -35,6 +35,11 @@ func InternalIssues(w http.ResponseWriter) {
 	fmt.Fprint(w, `{"error" : "Something went wrong"}`)
 }
 
+func NotAvailabe(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprint(w, `{"error" : "Resource not found"}`)
+}
+
 // Validates a struct
 func ValidateInput(object interface{}) (error, bool) {
 

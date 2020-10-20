@@ -52,6 +52,7 @@ func main() {
 
 	http.HandleFunc("/", serveHome)
 	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
+	http.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
 		ws.ChatServer(hub, w, req)
 	})
