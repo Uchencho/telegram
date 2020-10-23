@@ -1,10 +1,13 @@
-package server
+package ws
 
 import (
 	"bytes"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/utils"
 
 	"github.com/gorilla/websocket"
 )
@@ -166,7 +169,18 @@ func (c *Client) readMessage() {
 }
 
 // Take in the http request, upgrade it to a websocket request and spring up two go routines
-func ChatServer(hub *Hub, w http.ResponseWriter, req *http.Request) {
+func ChatServer(w http.ResponseWriter, req *http.Request) {
+
+	const userKey auth.Key = "user"
+	user, ok := req.Context().Value(userKey).(auth.User)
+	if !ok {
+		utils.InternalIssues(w)
+		return
+	}
+	log.Println("Retrieving user deatils, ", user)
+
+	hub := NewHub()
+	go hub.Run()
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,

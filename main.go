@@ -1,10 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/Uchencho/telegram/server"
+	"github.com/Uchencho/telegram/db"
+	"github.com/Uchencho/telegram/server/account"
+	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/ws"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -27,15 +33,27 @@ func serveHome(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, "home.html")
 }
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("No .env file found, with error: %s", err)
+	}
+}
+
 func main() {
 
-	hub := server.NewHub()
-	go hub.Run()
+	defer func() {
+		db.Db.Close()
+		fmt.Println("Db closed")
+	}()
+	// db.MigrateDB(db.Db)
 
 	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, req *http.Request) {
-		server.ChatServer(hub, w, req)
-	})
+	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
+	http.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
+	http.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
+	// http.HandleFunc("/ws", auth.UserMiddleware(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	// 	ws.ChatServer(w, req)
+	// })))
 
 	if err := http.ListenAndServe(defaultServerAddress, nil); err != http.ErrServerClosed {
 		log.Println(err)
