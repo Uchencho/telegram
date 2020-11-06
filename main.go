@@ -45,7 +45,7 @@ func main() {
 		db.Db.Close()
 		fmt.Println("Db closed")
 	}()
-	// db.MigrateDB(db.Db)
+	db.MigrateDB(db.Db)
 
 	http.HandleFunc("/", serveHome)
 	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
