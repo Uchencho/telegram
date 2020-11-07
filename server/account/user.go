@@ -2,6 +2,7 @@ package account
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -160,5 +161,64 @@ func Login(w http.ResponseWriter, req *http.Request) {
 
 	default:
 		utils.MethodNotAllowedResponse(w)
+	}
+}
+
+// RefreshToken is the endpoint for refreshing an access token
+func RefreshToken(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application-json")
+	switch req.Method {
+	case http.MethodPost:
+
+		refreshToken := refreshT{}
+		err := json.NewDecoder(req.Body).Decode(&refreshToken)
+		if err != nil && err.Error() == "EOF" {
+			utils.InvalidJsonResp(w, errors.New("No input was passed"))
+			return
+		} else if err != nil {
+			utils.InvalidJsonResp(w, err)
+			return
+		}
+
+		err, _ = utils.ValidateInput(refreshToken)
+		if err != nil {
+			utils.InvalidJsonResp(w, err)
+			return
+		}
+
+		email, err := auth.CheckRefreshToken(refreshToken.RefreshToken)
+		if err != nil && "Token is expired" == err.Error() {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error" : "Token has expired, please login"}`)
+			return
+		} else if err != nil {
+			auth.UnauthorizedResponse(w)
+			return
+		}
+
+		accessToken, err := auth.NewAccessToken(fmt.Sprint(email))
+		if err != nil {
+			utils.InternalIssues(w)
+			return
+		}
+
+		data := accessT{AccessToken: accessToken}
+		resp := utils.SuccessResponse{
+			Message: "success",
+			Data:    data,
+		}
+
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			utils.InternalIssues(w)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", auth.FrontEndOrigin)
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		fmt.Fprint(w, string(jsonResp))
+		return
+	default:
+		utils.MethodNotAllowedResponse(w)
+		return
 	}
 }

@@ -15,6 +15,14 @@ type loginInfo struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type refreshT struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type accessT struct {
+	AccessToken string `json:"access_token"`
+}
+
 type loginResponse struct {
 	ID           uint      `json:"id,omitempty"`
 	Email        string    `json:"email"`
@@ -28,6 +36,7 @@ type loginResponse struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
+// AddRecordToUserTable adds a record to the db
 func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 	query := `INSERT INTO Users (
 		email, hashed_password, date_joined, last_login, is_active, first_name,
@@ -48,7 +57,7 @@ func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 	return err
 }
 
-// Queries the customer's entire details and updates the laast login field if customer exist, using db transactions
+// GetUserLogin Queries the customer's entire details and updates the laast login field if customer exist, using db transactions
 func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 
 	ctx := context.Background()

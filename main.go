@@ -8,7 +8,9 @@ import (
 	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/account"
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/utils"
 	"github.com/Uchencho/telegram/server/ws"
+	"github.com/gorilla/mux"
 
 	"github.com/joho/godotenv"
 )
@@ -47,15 +49,19 @@ func main() {
 	}()
 	db.MigrateDB(db.Db)
 
-	http.HandleFunc("/", serveHome)
-	http.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
-	http.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
-	http.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
+	router := mux.NewRouter()
+	router.NotFoundHandler = auth.BasicToken(http.HandlerFunc(utils.NotAvailabe))
+
+	router.HandleFunc("/", serveHome)
+	router.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
+	router.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
+	router.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
+	router.HandleFunc("/api/refresh", account.RefreshToken)
 	// http.HandleFunc("/ws", auth.UserMiddleware(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	// 	ws.ChatServer(w, req)
 	// })))
 
-	if err := http.ListenAndServe(defaultServerAddress, nil); err != http.ErrServerClosed {
+	if err := http.ListenAndServe(defaultServerAddress, router); err != http.ErrServerClosed {
 		log.Println(err)
 	}
 }
