@@ -24,20 +24,23 @@ const (
 	writeWait      = 10 * time.Second
 )
 
+// Client is a representation of a websocket client
 type Client struct {
 	hub  *Hub
 	conn *websocket.Conn
 	send chan []byte
 }
 
+// Hub is a representation of a hub
 type Hub struct {
 	Clients    map[*Client]bool
+	Room       string
 	Broadcast  chan []byte
 	Register   chan *Client
 	Unregister chan *Client
 }
 
-// Creates a new hub
+// NewHub Creates a new hub
 func NewHub() *Hub {
 	return &Hub{
 		Broadcast:  make(chan []byte),
@@ -47,7 +50,7 @@ func NewHub() *Hub {
 	}
 }
 
-// Checks the status of the hub and sends the appropraite signal to the channel
+// Run Checks the status of the hub and sends the appropraite signal to the channel
 func (h *Hub) Run() {
 	for {
 		select {
@@ -59,6 +62,7 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.Broadcast:
+			// Retrieve the id that the message is going to
 			for client := range h.Clients {
 				select {
 				case client.send <- message:
@@ -168,7 +172,7 @@ func (c *Client) readMessage() {
 	}
 }
 
-// Take in the http request, upgrade it to a websocket request and spring up two go routines
+// ChatServer Takes in the http request, upgrade it to a websocket request and spring up two go routines
 func ChatServer(w http.ResponseWriter, req *http.Request) {
 
 	const userKey auth.Key = "user"
@@ -185,6 +189,9 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
 
 	conn, err := upgrader.Upgrade(w, req, nil)
@@ -198,3 +205,9 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 	go client.readMessage()
 	go client.sendMessage()
 }
+
+/*
+	Retrieve the user id, the logged in user is trying to send a message to
+	Pass in the id to the function informing it which room to send the message to
+
+*/

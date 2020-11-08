@@ -30,7 +30,8 @@ window.onload = function () {
     };
 
     if (window["WebSocket"]) {
-        conn = new WebSocket("ws://" + document.location.host + "/ws");
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjA0ODI1NzE0fQ.KCqjHaF31TcxT3uru_f-ov09-qxAWKVLamirugiIPjs"
+        conn = new WebSocket("ws://localhost:8000" + document.location.host + "/ws?token=" + token);
         conn.onclose = function (evt) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";

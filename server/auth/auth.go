@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -244,6 +245,48 @@ func UserMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"error" : "Token not passed"}`)
+	})
+}
+
+// WebsocketAuthMiddleware retrieves the user details using authentication specific for websocket requests
+func WebsocketAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		urlVals := r.URL.Query()
+		if token := urlVals.Get("token"); token != "" {
+
+			email, err := checkAccessToken(token)
+			if err != nil && "Token is expired" == err.Error() {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "Token has expired please login"}`)
+				return
+			} else if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "Invalid token"}`)
+				return
+			}
+
+			// Retrieve the user and pass it into a context, to do!
+			user, err := getUser(db.Db, fmt.Sprint(email))
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "User does not exist"}`)
+				return
+			}
+
+			const userKey Key = "user"
+			ctx := context.WithValue(r.Context(), userKey, user)
+
+			//Allow CORS here By or specific origin
+			w.Header().Set("Access-Control-Allow-Origin", FrontEndOrigin)
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		log.Println("User details not passed")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, `{"error" : "Token not passed"}`)
 	})
