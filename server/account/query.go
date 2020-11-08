@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/pkg/errors"
 )
 
 type loginInfo struct {
@@ -32,8 +33,8 @@ type loginResponse struct {
 	IsActive     bool      `json:"is_active"`
 	DateJoined   time.Time `json:"date_joined"`
 	LastLogin    time.Time `json:"last_login"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
+	AccessToken  string    `json:"access_token,omitempty"`
+	RefreshToken string    `json:"refresh_token,omitempty"`
 }
 
 // AddRecordToUserTable adds a record to the db
@@ -115,4 +116,18 @@ func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 		return auth.User{}, err
 	}
 	return user, nil
+}
+
+// UpdateUserRecord updates the first name and phone number of a user
+func UpdateUserRecord(db *sql.DB, user auth.User) error {
+	query := `UPDATE Users SET first_name = ?, phone_number = ? WHERE email = ?;`
+	prep, err := db.Prepare(query)
+	if err != nil {
+		return errors.Wrap(err, "account - Could not prepare query")
+	}
+	_, err = prep.Exec(user.FirstName, user.PhoneNumber, user.Email)
+	if err != nil {
+		return errors.Wrap(err, "account - Could not execute query")
+	}
+	return nil
 }

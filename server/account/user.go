@@ -222,3 +222,88 @@ func RefreshToken(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 }
+
+// UserProfile is the endpoint that is used for user details
+func UserProfile(w http.ResponseWriter, req *http.Request) {
+	const userKey auth.Key = "user"
+	user, ok := req.Context().Value(userKey).(auth.User)
+	if !ok {
+		utils.InternalIssues(w)
+		return
+	}
+
+	switch req.Method {
+	case http.MethodGet:
+
+		data := loginResponse{
+			ID:          user.ID,
+			Email:       user.Email,
+			FirstName:   user.FirstName,
+			PhoneNumber: user.PhoneNumber,
+			UserAddress: user.UserAddress,
+			IsActive:    user.IsActive,
+			DateJoined:  user.DateJoined,
+			LastLogin:   user.LastLogin,
+		}
+		successR := utils.SuccessResponse{
+			Message: "success",
+			Data:    data,
+		}
+		jsonResp, err := json.Marshal(successR)
+		if err != nil {
+			utils.InternalIssues(w)
+			return
+		}
+		fmt.Fprint(w, string(jsonResp))
+		return
+
+	case http.MethodPut:
+
+		userProfile := auth.User{}
+		userProfile.Email = user.Email
+		err := json.NewDecoder(req.Body).Decode(&userProfile)
+		if err != nil && err.Error() == "EOF" {
+			utils.InvalidJsonResp(w, errors.New("No input was passed"))
+			return
+		} else if err != nil {
+			utils.InvalidJsonResp(w, err)
+			return
+		}
+
+		err, _ = utils.ValidateInput(userProfile)
+		if err != nil {
+			utils.InvalidJsonResp(w, err)
+			return
+		}
+
+		if userProfile.UserAddress == "" && userProfile.PhoneNumber == "" && userProfile.FirstName == "" {
+			utils.InvalidJsonResp(w, errors.New("No input field was passed"))
+			return
+		}
+
+		err = UpdateUserRecord(db.Db, userProfile)
+		if err != nil {
+			utils.InternalIssues(w)
+			return
+		}
+		user.FirstName = userProfile.FirstName
+		user.UserAddress = userProfile.UserAddress
+		user.PhoneNumber = userProfile.PhoneNumber
+		user.HashedPassword = ""
+		resp := utils.SuccessResponse{
+			Message: "success",
+			Data:    user,
+		}
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			utils.InternalIssues(w)
+			return
+		}
+		fmt.Fprint(w, string(jsonResp))
+		return
+
+	default:
+		utils.MethodNotAllowedResponse(w)
+		return
+	}
+}

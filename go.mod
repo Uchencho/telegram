@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.3.0
 	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )

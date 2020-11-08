@@ -20,3 +20,4 @@ build: clean local
 
 run-local:
 	go run main.go
+	

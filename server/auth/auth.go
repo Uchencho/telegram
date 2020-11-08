@@ -27,8 +27,8 @@ type RegisterUser struct {
 // User is a representation of a user
 type User struct {
 	ID             uint      `json:"id"`
-	Email          string    `json:"email"`
-	HashedPassword string    `json:"password"`
+	Email          string    `json:"email" validate:"required,email"`
+	HashedPassword string    `json:"password,omitempty"`
 	FirstName      string    `json:"first_name"`
 	PhoneNumber    string    `json:"phone_number"`
 	UserAddress    string    `json:"user_address"`

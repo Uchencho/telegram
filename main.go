@@ -55,8 +55,10 @@ func main() {
 	router.HandleFunc("/", serveHome)
 	router.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
 	router.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
-	router.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
 	router.HandleFunc("/api/refresh", account.RefreshToken)
+	router.Handle("/api/profile", auth.UserMiddleware(http.HandlerFunc(account.UserProfile)))
+	router.Handle("/ws", auth.UserMiddleware(http.HandlerFunc(ws.ChatServer)))
+
 	// http.HandleFunc("/ws", auth.UserMiddleware(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	// 	ws.ChatServer(w, req)
 	// })))
