@@ -8,6 +8,7 @@ import (
 	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/account"
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/chat"
 	"github.com/Uchencho/telegram/server/utils"
 	"github.com/Uchencho/telegram/server/ws"
 	"github.com/gorilla/mux"
@@ -57,11 +58,12 @@ func main() {
 	router.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
 	router.HandleFunc("/api/refresh", account.RefreshToken)
 	router.Handle("/api/profile", auth.UserMiddleware(http.HandlerFunc(account.UserProfile)))
-	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.ChatServer)))
 
-	// http.HandleFunc("/ws", auth.UserMiddleware(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	// 	ws.ChatServer(w, req)
-	// })))
+	// Chat
+	router.Handle("/api/chat/history", auth.UserMiddleware(http.HandlerFunc(chat.History)))
+
+	// Websocket
+	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.ChatServer)))
 
 	if err := http.ListenAndServe(defaultServerAddress, router); err != http.ErrServerClosed {
 		log.Println(err)

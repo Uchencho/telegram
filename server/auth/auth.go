@@ -44,14 +44,12 @@ type User struct {
 // Key is a representation of the expected type to decode the context passed
 type Key string
 
-const (
-	// FrontEndOrigin represents the origin of the consumer of the API
-	FrontEndOrigin string = "*"
-)
-
 var (
 	signingKey        = []byte(os.Getenv("SIGNING_KEY"))
 	refreshSigningKey = []byte(os.Getenv("REFRESH_SIGNING_KEY"))
+
+	// FrontEndOrigin is the origin of the consumer
+	FrontEndOrigin string = os.Getenv("FRONT_ORIGIN")
 )
 
 // HashPassword Hashes a password
