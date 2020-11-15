@@ -195,95 +195,6 @@
 			"name": "utils",
 			"item": [
 				{
-					"name": "register User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/api/register",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"register"
-							]
-						},
-						"description": "Register a user"
-					},
-					"response": [
-						{
-							"name": "sample error response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "http://127.0.0.1:8000/api/register",
-									"protocol": "http",
-									"host": [
-										"127",
-										"0",
-										"0",
-										"1"
-									],
-									"port": "8000",
-									"path": [
-										"api",
-										"register"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								},
-								{
-									"key": "Date",
-									"value": "Mon, 19 Oct 2020 15:56:00 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "47"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"User already exists, please login\"\n}"
-						}
-					]
-				},
-				{
 					"name": "login",
 					"request": {
 						"auth": {
@@ -374,6 +285,95 @@
 							],
 							"cookie": [],
 							"body": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"email\": \"aloziekelechi17@gmail.com\",\n        \"first_name\": \"\",\n        \"phone_number\": \"\",\n        \"user_address\": \"\",\n        \"is_active\": true,\n        \"date_joined\": \"2020-10-19T15:52:57Z\",\n        \"last_login\": \"2020-10-19T15:52:57Z\",\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjAzMjA2ODgzfQ.FTjY63HQXo6C_iaLjLL2AkF_gxqlcLZspUhXnrGohQc\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjAzMjI4NDgzfQ.f42XNDfyCIHPSpiXcWE8gM8i_xwNfCJNt58PxxY4-qg\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "register User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"register"
+							]
+						},
+						"description": "Register a user"
+					},
+					"response": [
+						{
+							"name": "sample error response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/register",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 19 Oct 2020 15:56:00 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "47"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": \"User already exists, please login\"\n}"
 						}
 					]
 				},
@@ -480,6 +480,147 @@
 							],
 							"cookie": [],
 							"body": "{\n    \"message\": \"success\",\n    \"data\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "messages",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\" : 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat/history/messages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chat",
+								"history",
+								"messages"
+							]
+						},
+						"description": "List of a messages between two users in a thread"
+					},
+					"response": [
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\" : 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/chat/history/messages",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"chat",
+										"history",
+										"messages"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 15 Nov 2020 10:33:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "268"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Hello\",\n            \"input_time\": \"2020-11-15T11:32:16Z\"\n        },\n        {\n            \"id\": 2,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Communicating effectively\",\n            \"input_time\": \"2020-11-15T11:33:13Z\"\n        }\n    ]\n}"
+						},
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\" : 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/chat/history/messages",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"chat",
+										"history",
+										"messages"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 15 Nov 2020 10:33:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "268"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Hello\",\n            \"input_time\": \"2020-11-15T11:32:16Z\"\n        },\n        {\n            \"id\": 2,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Communicating effectively\",\n            \"input_time\": \"2020-11-15T11:33:13Z\"\n        }\n    ]\n}"
 						}
 					]
 				}
