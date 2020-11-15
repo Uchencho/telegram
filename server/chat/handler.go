@@ -32,7 +32,7 @@ func History(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if len(threads) == 0 {
-			resp.Data = []thread{}
+			resp.Data = []Thread{}
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
 				utils.InternalIssues(w, err)
@@ -68,7 +68,7 @@ func MessageHistory(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 
-		threadPayload := thread{}
+		threadPayload := Thread{}
 		err := json.NewDecoder(req.Body).Decode(&threadPayload)
 		if err != nil {
 			utils.InvalidJsonResp(w, err)
@@ -90,7 +90,7 @@ func MessageHistory(w http.ResponseWriter, req *http.Request) {
 			Message: "success",
 		}
 		if len(chatList) == 0 {
-			resp.Data = []message{}
+			resp.Data = []Message{}
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
 				utils.InternalIssues(w, err)

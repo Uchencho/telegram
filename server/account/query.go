@@ -48,8 +48,7 @@ func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 
 	prep, err := db.Prepare(query)
 	if err != nil {
-		log.Printf("Error occured in preparing query, %v", err)
-		return err
+		return errors.Wrap(err, "Error occured in preparing query")
 	}
 
 	_, err = prep.Exec(user.Email, user.HashedPassword,
@@ -75,10 +74,9 @@ func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 		address interface{}
 	)
 
-	prep, err := db.PrepareContext(ctx, query)
+	prep, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		log.Printf("Error occured in preparing query, %v", err)
-		return auth.User{}, err
+		return auth.User{}, errors.Wrap(err, "Error occured in preparing query")
 	}
 	row := prep.QueryRowContext(ctx, email)
 	switch err := row.Scan(&user.ID, &user.Email, &user.HashedPassword,

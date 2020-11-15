@@ -5,9 +5,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/chat"
 	"github.com/Uchencho/telegram/server/utils"
 
 	"github.com/gorilla/websocket"
@@ -27,9 +30,10 @@ const (
 
 // Client is a representation of a websocket client
 type Client struct {
-	hub  *Hub
-	conn *websocket.Conn
-	send chan []byte
+	hub    *Hub
+	conn   *websocket.Conn
+	send   chan []byte
+	Thread int
 }
 
 // Hub is a representation of a hub
@@ -77,7 +81,7 @@ func (h *Hub) Run() {
 }
 
 // Send messages to the hub
-func (c *Client) sendMessage() {
+func (c *Client) sendMessage(user auth.User) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -107,6 +111,18 @@ func (c *Client) sendMessage() {
 			_, err = w.Write(message)
 			if err != nil {
 				log.Println(err)
+			}
+
+			// Write to DB to store the chat
+			msg := chat.Message{
+				UserID:   int(user.ID),
+				Username: user.FirstName,
+				Thread:   c.Thread,
+				Chatmsg:  string(message),
+			}
+			err = storeMessage(db.Db, msg)
+			if err != nil {
+				log.Println("\n\n", err)
 			}
 
 			n := len(c.send)
@@ -182,7 +198,33 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 		utils.InternalIssues(w, errors.New("Cannot decode context from middleware"))
 		return
 	}
-	log.Println("Retrieving user deatils, ", user)
+
+	urlValues := req.URL.Query()
+	username := urlValues.Get("receiver_username")
+	userID := urlValues.Get("receiver_id")
+	if username == "" || userID == "" {
+		utils.InvalidJsonResp(w, errors.New("Invalid query parameters passed"))
+		return
+	}
+
+	secondUserID, err := strconv.Atoi(userID)
+	if err != nil {
+		utils.InvalidJsonResp(w, err)
+		return
+	}
+
+	threadInput := chat.Thread{
+		FirstUserID:    int(user.ID),
+		FirstUsername:  user.FirstName,
+		SecondUserID:   secondUserID,
+		SecondUsername: username,
+	}
+
+	threadID, err := getOrCreateThread(db.Db, threadInput)
+	if err != nil {
+		utils.InternalIssues(w, err)
+		return
+	}
 
 	hub := NewHub()
 	go hub.Run()
@@ -200,15 +242,10 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Thread: threadID}
 	client.hub.Register <- client
 
 	go client.readMessage()
-	go client.sendMessage()
+	go client.sendMessage(user)
 }
-
-/*
-	Retrieve the user id, the logged in user is trying to send a message to
-	Pass in the id to the function informing it which room to send the message to
-
-*/
