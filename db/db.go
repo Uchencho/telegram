@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	// Indirect import needed
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
@@ -15,14 +16,15 @@ func databaseURL() string {
 		log.Fatalf("No .env file found, with error: %v", err)
 	}
 
-	dbUrl, present := os.LookupEnv("DATABASE_URL")
+	dbURL, present := os.LookupEnv("DATABASE_URL")
 	if present {
-		return dbUrl
+		return dbURL
 	}
-	mysql_conn := os.Getenv("DB_LINK")
-	return mysql_conn
+	mySQLConn := os.Getenv("DB_LINK")
+	return mySQLConn
 }
 
+// ConnectDatabase connects to a database
 func ConnectDatabase() *sql.DB {
 	db, err := sql.Open("mysql", databaseURL())
 	if err != nil {
@@ -37,4 +39,5 @@ func ConnectDatabase() *sql.DB {
 	return db
 }
 
+// Db is exported to give the functionality of interacting with the database
 var Db = ConnectDatabase()

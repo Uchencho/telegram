@@ -30,7 +30,8 @@ func MethodNotAllowedResponse(w http.ResponseWriter) {
 	fmt.Fprint(w, `{"message" : "Method Not allowed"}`)
 }
 
-func InternalIssues(w http.ResponseWriter) {
+func InternalIssues(w http.ResponseWriter, err error) {
+	log.Println("\n\n", err)
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, `{"error" : "Something went wrong"}`)
 }

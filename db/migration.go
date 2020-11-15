@@ -8,9 +8,12 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
+
+	// Needed
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+// MigrateDB helps apply migrations to a database
 func MigrateDB(db *sql.DB) {
 
 	var migrationDir = flag.String("migration files", "./db/migration/",

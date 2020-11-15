@@ -2,6 +2,7 @@ package ws
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -178,7 +179,7 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 	const userKey auth.Key = "user"
 	user, ok := req.Context().Value(userKey).(auth.User)
 	if !ok {
-		utils.InternalIssues(w)
+		utils.InternalIssues(w, errors.New("Cannot decode context from middleware"))
 		return
 	}
 	log.Println("Retrieving user deatils, ", user)

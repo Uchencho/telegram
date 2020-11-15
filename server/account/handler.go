@@ -48,7 +48,7 @@ func Register(w http.ResponseWriter, req *http.Request) {
 
 		user.HashedPassword, err = auth.HashPassword(userPayload.Password)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 
@@ -61,7 +61,7 @@ func Register(w http.ResponseWriter, req *http.Request) {
 
 		accessToken, refreshToken, err := auth.GenerateToken(user.Email)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 
@@ -81,7 +81,7 @@ func Register(w http.ResponseWriter, req *http.Request) {
 		}
 		jsonResp, err := json.Marshal(successResp)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 		}
 
 		fmt.Fprint(w, string(jsonResp))
@@ -133,7 +133,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 
 		accessToken, refreshToken, err := auth.GenerateToken(customer.Email)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 
@@ -153,7 +153,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 		}
 		jsonResp, err := json.Marshal(successResp)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 		}
 
 		fmt.Fprint(w, string(jsonResp))
@@ -198,7 +198,7 @@ func RefreshToken(w http.ResponseWriter, req *http.Request) {
 
 		accessToken, err := auth.NewAccessToken(fmt.Sprint(email))
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 
@@ -210,7 +210,7 @@ func RefreshToken(w http.ResponseWriter, req *http.Request) {
 
 		jsonResp, err := json.Marshal(resp)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 		w.Header().Set("Access-Control-Allow-Origin", auth.FrontEndOrigin)
@@ -228,7 +228,7 @@ func UserProfile(w http.ResponseWriter, req *http.Request) {
 	const userKey auth.Key = "user"
 	user, ok := req.Context().Value(userKey).(auth.User)
 	if !ok {
-		utils.InternalIssues(w)
+		utils.InternalIssues(w, errors.New("Can't decode user details from middleware"))
 		return
 	}
 
@@ -251,7 +251,7 @@ func UserProfile(w http.ResponseWriter, req *http.Request) {
 		}
 		jsonResp, err := json.Marshal(successR)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 		fmt.Fprint(w, string(jsonResp))
@@ -283,7 +283,7 @@ func UserProfile(w http.ResponseWriter, req *http.Request) {
 
 		err = UpdateUserRecord(db.Db, userProfile)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 		user.FirstName = userProfile.FirstName
@@ -296,7 +296,7 @@ func UserProfile(w http.ResponseWriter, req *http.Request) {
 		}
 		jsonResp, err := json.Marshal(resp)
 		if err != nil {
-			utils.InternalIssues(w)
+			utils.InternalIssues(w, err)
 			return
 		}
 		fmt.Fprint(w, string(jsonResp))

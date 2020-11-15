@@ -61,6 +61,7 @@ func main() {
 
 	// Chat
 	router.Handle("/api/chat/history", auth.UserMiddleware(http.HandlerFunc(chat.History)))
+	router.Handle("/api/chat/history/messages", auth.UserMiddleware(http.HandlerFunc(chat.MessageHistory)))
 
 	// Websocket
 	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.ChatServer)))
