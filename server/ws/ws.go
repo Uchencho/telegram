@@ -3,6 +3,7 @@ package ws
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,15 +35,28 @@ type Client struct {
 	conn   *websocket.Conn
 	send   chan []byte
 	Thread int
+	Room   string
 }
 
 // Hub is a representation of a hub
 type Hub struct {
 	Clients    map[*Client]bool
-	Room       string
+	Payload    chan map[string][]byte
 	Broadcast  chan []byte
 	Register   chan *Client
 	Unregister chan *Client
+}
+
+func getRoomName(userOneID, userTwoID int) (roomName string) {
+
+	userOneString := strconv.Itoa(userOneID)
+	userTwoString := strconv.Itoa(userTwoID)
+	if userOneID <= userTwoID {
+		roomName = userOneString + "_" + userTwoString
+	} else {
+		roomName = userTwoString + "_" + userOneString
+	}
+	return fmt.Sprintf("room_%s", roomName)
 }
 
 // NewHub Creates a new hub
@@ -52,12 +66,14 @@ func NewHub() *Hub {
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client]bool),
+		Payload:    make(chan map[string][]byte),
 	}
 }
 
 // Run Checks the status of the hub and sends the appropraite signal to the channel
 func (h *Hub) Run() {
 	for {
+		log.Println("Details of the hub is: ", h, "Payload is: ", h.Payload, "Register: ", h.Register, h.Unregister, "Clients: ", h.Clients)
 		select {
 		case client := <-h.Register:
 			h.Clients[client] = true
@@ -66,11 +82,24 @@ func (h *Hub) Run() {
 				delete(h.Clients, client)
 				close(client.send)
 			}
+		case p := <-h.Payload:
+			log.Println("\n\nHub things here: ", time.Now(), ">>>>>>", p)
+			for client := range h.Clients {
+				message, present := p[client.Room]
+				if present {
+					log.Println("\n\nFound a room ", time.Now(), ">>>>", client.Room)
+					client.send <- message
+				} else {
+					close(client.send)
+					delete(h.Clients, client)
+				}
+			}
 		case message := <-h.Broadcast:
 			// Retrieve the id that the message is going to
 			for client := range h.Clients {
 				select {
 				case client.send <- message:
+					log.Println("\n\nBroadcast things here: ", time.Now())
 				default:
 					close(client.send)
 					delete(h.Clients, client)
@@ -91,6 +120,7 @@ func (c *Client) sendMessage(user auth.User) {
 	for {
 		select {
 		case message, ok := <-c.send:
+			log.Println("\n\nI just got called", time.Now())
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
 				log.Println(err)
@@ -114,16 +144,16 @@ func (c *Client) sendMessage(user auth.User) {
 			}
 
 			// Write to DB to store the chat
-			msg := chat.Message{
-				UserID:   int(user.ID),
-				Username: user.FirstName,
-				Thread:   c.Thread,
-				Chatmsg:  string(message),
-			}
-			err = storeMessage(db.Db, msg)
-			if err != nil {
-				log.Println("\n\n", err)
-			}
+			// msg := chat.Message{
+			// 	UserID:   int(user.ID),
+			// 	Username: user.FirstName,
+			// 	Thread:   c.Thread,
+			// 	Chatmsg:  string(message),
+			// }
+			// err = storeMessage(db.Db, msg)
+			// if err != nil {
+			// 	log.Println("\n\n", err)
+			// }
 
 			n := len(c.send)
 			for i := 0; i < n; i++ {
@@ -184,8 +214,15 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
+
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.Broadcast <- message
+		// Put in message into a room
+		payload := map[string][]byte{
+			c.Room: message,
+		}
+		// c.hub.Broadcast <- message
+		log.Println("\n\nMessage put into hub:  ", time.Now(), "Room name is: ", c.Room, "message is: ", string(message))
+		c.hub.Payload <- payload
 	}
 }
 
@@ -243,9 +280,23 @@ func ChatServer(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), Thread: threadID}
+	client := &Client{hub: hub,
+		conn:   conn,
+		send:   make(chan []byte, 256),
+		Thread: threadID,
+		Room:   getRoomName(int(user.ID), secondUserID),
+	}
 	client.hub.Register <- client
 
 	go client.readMessage()
 	go client.sendMessage(user)
 }
+
+/*
+Connect to a specific room
+Send message
+Read message from a specific room
+
+Case when the message is being put in a room
+Find the client for that room and send him a message
+*/

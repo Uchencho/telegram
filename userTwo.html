@@ -30,19 +30,19 @@ window.onload = function () {
     };
 
     if (window["WebSocket"]) {
-        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjA1NzE0Nzk3fQ.8WptRV3OPgHHT95fD2Unhd6pGJBAsWPFk9oUOcILqlY"
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJqYW5ldEBnbWFpbC5jb20iLCJleHAiOjE2MDU3MTc2NDB9.An8YTcsqxdJzllh8bRP85QKvemv-xcl6pKnT3QwWSEw"
         conn = new WebSocket("ws://localhost:8000" 
                                 + document.location.host 
                                 + "/ws?token=" + token
-                                + '&receiver_username=Jason'
-                                +'&receiver_id=3');
+                                + '&receiver_username=uchencho'
+                                +'&receiver_id=1');
         conn.onclose = function (evt) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
             appendLog(item);
         };
 
-        // Uchencho is sending a message
+        // Jason is sending a message
         conn.onmessage = function (evt) {
             var messages = evt.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
