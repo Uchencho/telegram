@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chat Example</title>
+<title>Janet Space</title>
 <script type="text/javascript">
 window.onload = function () {
     var conn;
@@ -25,25 +25,36 @@ window.onload = function () {
             return false;
         }
         conn.send(msg.value);
+        console.log("Submit button brought: ", msg, " and value is ", msg.value)
         msg.value = "";
         return false;
     };
 
     if (window["WebSocket"]) {
-        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjA1NzE0Nzk3fQ.8WptRV3OPgHHT95fD2Unhd6pGJBAsWPFk9oUOcILqlY"
+        const email = "janet@gmail.com"
+        const receiverUsername = "uchencho"
+        const receiverID = "1"
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJqYW5ldEBnbWFpbC5jb20iLCJleHAiOjE2MDU5NjQxMTJ9.MZUGcfB7kTQ__eORP1gxG4hgHeMgeXsucpa6AoqDHWM"
+
+        console.log("Making request with credentials: ", email, "Speaking with: ", receiverUsername)
         conn = new WebSocket("ws://localhost:8000" 
-                                + document.location.host 
-                                + "/ws?token=" + token
-                                + '&receiver_username=Jason'
-                                +'&receiver_id=3');
+                                    + document.location.host 
+                                    + "/ws?token=" + token
+                                    + '&receiver_username=' + receiverUsername
+                                    +'&receiver_id=' + receiverID);
         conn.onclose = function (evt) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
             appendLog(item);
         };
 
-        // Uchencho is sending a message
         conn.onmessage = function (evt) {
+            try {
+                console.log("Received from the server: ", event.data)
+            } catch (error) {
+                console.log(error)
+            }
+
             var messages = evt.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
                 var item = document.createElement("div");

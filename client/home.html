@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chat Example</title>
+<title>Kelechi Space</title>
 <script type="text/javascript">
 window.onload = function () {
     var conn;
@@ -25,31 +25,41 @@ window.onload = function () {
             return false;
         }
         conn.send(msg.value);
+        console.log("Submit button brought: ", msg, " and value is ", msg.value)
         msg.value = "";
         return false;
     };
 
     if (window["WebSocket"]) {
-        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJqYW5ldEBnbWFpbC5jb20iLCJleHAiOjE2MDU3MTc2NDB9.An8YTcsqxdJzllh8bRP85QKvemv-xcl6pKnT3QwWSEw"
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjA1OTY0MTUwfQ.0LCsnqxB2cQygZM05JaFkO7dMtlBgrdS1NrbkKvrZCs"
+        console.log("Making request with credentials: ", "Kelechi, ", "Speaking with: Jason")
         conn = new WebSocket("ws://localhost:8000" 
                                 + document.location.host 
                                 + "/ws?token=" + token
-                                + '&receiver_username=uchencho'
-                                +'&receiver_id=1');
+                                + '&receiver_username=Jason'
+                                +'&receiver_id=3');
         conn.onclose = function (evt) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
             appendLog(item);
         };
 
-        // Jason is sending a message
         conn.onmessage = function (evt) {
+
+            try {
+                console.log("Received from the server: ", event.data)
+            } catch (error) {
+                console.log(error)
+            }
+            
             var messages = evt.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
                 var item = document.createElement("div");
                 item.innerText = messages[i];
                 appendLog(item);
             }
+
+            console.log("Item is: ", item)
         };
     } else {
         var item = document.createElement("div");

@@ -64,7 +64,7 @@ func main() {
 	router.Handle("/api/chat/history/messages", auth.UserMiddleware(http.HandlerFunc(chat.MessageHistory)))
 
 	// Websocket
-	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.ChatServer)))
+	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.WebSocketServer)))
 
 	if err := http.ListenAndServe(defaultServerAddress, router); err != http.ErrServerClosed {
 		log.Println(err)
