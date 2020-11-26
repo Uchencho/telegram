@@ -47,9 +47,6 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 
 			// Concurrently store the message
 			go storeMessage(db.Db, msg)
-			if err != nil {
-				log.Println("\n\n", err)
-			}
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)

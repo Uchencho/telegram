@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	newline = []byte(`\n`)
-	space   = []byte(` `)
-	theMap  = map[string][]*WClient{}
+	newline        = []byte(`\n`)
+	space          = []byte(` `)
+	roomAndClients = map[string][]*WClient{}
 )
 
 const (
@@ -74,19 +74,19 @@ func newHub() *Hub {
 }
 
 func checkRoom(roomName string, client *WClient) map[string][]*WClient {
-	clients, created := theMap[roomName]
+	clients, created := roomAndClients[roomName]
 	if created {
 		for _, regClient := range clients {
 			if regClient == client {
-				return theMap
+				return roomAndClients
 			}
 		}
 		clients = append(clients, client)
-		theMap[roomName] = clients
-		return theMap
+		roomAndClients[roomName] = clients
+		return roomAndClients
 	}
-	theMap[roomName] = []*WClient{client}
-	return theMap
+	roomAndClients[roomName] = []*WClient{client}
+	return roomAndClients
 }
 
 func (h *Hub) run() {
@@ -99,6 +99,9 @@ func (h *Hub) run() {
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
+
+				// Remove client from the room
+				// Check if the room is empty, if it is, delete the room
 				close(client.send)
 			}
 		case incomingPL := <-h.roomMessage:
@@ -111,6 +114,8 @@ func (h *Hub) run() {
 						default:
 							close(client.send)
 							delete(h.clients, client)
+
+							// Remove client from room
 						}
 					}
 				}
