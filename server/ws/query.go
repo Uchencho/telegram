@@ -3,12 +3,13 @@ package ws
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/Uchencho/telegram/server/chat"
 	"github.com/pkg/errors"
 )
 
-func storeMessage(db *sql.DB, msg chat.Message) error {
+func storeMessage(db *sql.DB, msg chat.Message) {
 	query := `INSERT INTO ChatMessage (
 		userID, username, thread, chatmsg
 	) VALUES (
@@ -17,14 +18,13 @@ func storeMessage(db *sql.DB, msg chat.Message) error {
 
 	prep, err := db.Prepare(query)
 	if err != nil {
-		return errors.Wrap(err, "ws - Could not prepare query")
+		log.Println("ws - Could not prepare query")
 	}
 
 	_, err = prep.Exec(msg.UserID, msg.Username, msg.Thread, msg.Chatmsg)
 	if err != nil {
-		return errors.Wrap(err, "ws - Could not execute query")
+		log.Println("ws - Could not execute query")
 	}
-	return nil
 }
 
 func getOrCreateThread(db *sql.DB, thread chat.Thread) (threadID int, err error) {

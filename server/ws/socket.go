@@ -44,7 +44,9 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 				Thread:   c.Thread,
 				Chatmsg:  string(message),
 			}
-			err = storeMessage(db.Db, msg)
+
+			// Concurrently store the message
+			go storeMessage(db.Db, msg)
 			if err != nil {
 				log.Println("\n\n", err)
 			}
@@ -96,12 +98,7 @@ func (c *WClient) readMsgFromRoom(roomName string) {
 func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 
 	// Retrieve user from context
-	const userKey auth.Key = "user"
-	user, ok := req.Context().Value(userKey).(auth.User)
-	if !ok {
-		utils.InternalIssues(w, errors.New("Cannot decode context from middleware"))
-		return
-	}
+	user := utils.GetUserFromRequestContext(w, req)
 
 	urlValues := req.URL.Query()
 	username := urlValues.Get("receiver_username")
