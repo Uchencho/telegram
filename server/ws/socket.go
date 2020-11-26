@@ -107,13 +107,13 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 	username := urlValues.Get("receiver_username")
 	userID := urlValues.Get("receiver_id")
 	if username == "" || userID == "" {
-		utils.InvalidJsonResp(w, errors.New("Invalid query parameters passed"))
+		utils.InvalidJSONResp(w, errors.New("Invalid query parameters passed"))
 		return
 	}
 
 	secondUserID, err := strconv.Atoi(userID)
 	if err != nil {
-		utils.InvalidJsonResp(w, err)
+		utils.InvalidJSONResp(w, err)
 		return
 	}
 

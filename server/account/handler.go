@@ -25,18 +25,18 @@ func Register(w http.ResponseWriter, req *http.Request) {
 
 		err = json.NewDecoder(req.Body).Decode(&userPayload)
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
-		err, aboveOneField := utils.ValidateInput(userPayload)
+		aboveOneField, err := utils.ValidateInput(userPayload)
 		if aboveOneField {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, `{"error" : "Invalid Payload"}`)
 			return
 		}
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 		user := auth.User{
@@ -103,17 +103,17 @@ func Login(w http.ResponseWriter, req *http.Request) {
 
 		err := json.NewDecoder(req.Body).Decode(&loginDetails)
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
-		err, aboveOneField := utils.ValidateInput(loginDetails)
+		aboveOneField, err := utils.ValidateInput(loginDetails)
 		if aboveOneField {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, `{"error" : "Invalid Payload"}`)
 			return
 		}
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
@@ -173,16 +173,16 @@ func RefreshToken(w http.ResponseWriter, req *http.Request) {
 		refreshToken := refreshT{}
 		err := json.NewDecoder(req.Body).Decode(&refreshToken)
 		if err != nil && err.Error() == "EOF" {
-			utils.InvalidJsonResp(w, errors.New("No input was passed"))
+			utils.InvalidJSONResp(w, errors.New("No input was passed"))
 			return
 		} else if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
-		err, _ = utils.ValidateInput(refreshToken)
+		_, err = utils.ValidateInput(refreshToken)
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
@@ -225,12 +225,7 @@ func RefreshToken(w http.ResponseWriter, req *http.Request) {
 
 // UserProfile is the endpoint that is used for user details
 func UserProfile(w http.ResponseWriter, req *http.Request) {
-	const userKey auth.Key = "user"
-	user, ok := req.Context().Value(userKey).(auth.User)
-	if !ok {
-		utils.InternalIssues(w, errors.New("Can't decode user details from middleware"))
-		return
-	}
+	user := utils.GetUserFromRequestContext(w, req)
 
 	switch req.Method {
 	case http.MethodGet:
@@ -263,21 +258,21 @@ func UserProfile(w http.ResponseWriter, req *http.Request) {
 		userProfile.Email = user.Email
 		err := json.NewDecoder(req.Body).Decode(&userProfile)
 		if err != nil && err.Error() == "EOF" {
-			utils.InvalidJsonResp(w, errors.New("No input was passed"))
+			utils.InvalidJSONResp(w, errors.New("No input was passed"))
 			return
 		} else if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
-		err, _ = utils.ValidateInput(userProfile)
+		_, err = utils.ValidateInput(userProfile)
 		if err != nil {
-			utils.InvalidJsonResp(w, err)
+			utils.InvalidJSONResp(w, err)
 			return
 		}
 
 		if userProfile.UserAddress == "" && userProfile.PhoneNumber == "" && userProfile.FirstName == "" {
-			utils.InvalidJsonResp(w, errors.New("No input field was passed"))
+			utils.InvalidJSONResp(w, errors.New("No input field was passed"))
 			return
 		}
 
