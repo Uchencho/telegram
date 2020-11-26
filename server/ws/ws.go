@@ -1,25 +1,15 @@
 package ws
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"log"
-	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/Uchencho/telegram/db"
-	"github.com/Uchencho/telegram/server/auth"
-	"github.com/Uchencho/telegram/server/chat"
-	"github.com/Uchencho/telegram/server/utils"
-
-	"github.com/gorilla/websocket"
 )
 
 var (
 	newline = []byte(`\n`)
 	space   = []byte(` `)
+	theMap  = map[string][]*WClient{}
 )
 
 const (
@@ -29,22 +19,21 @@ const (
 	writeWait      = 10 * time.Second
 )
 
-// Client is a representation of a websocket client
-type Client struct {
-	hub    *Hub
-	conn   *websocket.Conn
-	send   chan []byte
-	Thread int
-	Room   string
-}
-
 // Hub is a representation of a hub
 type Hub struct {
-	Clients    map[*Client]bool
-	Payload    chan map[string][]byte
-	Broadcast  chan []byte
-	Register   chan *Client
-	Unregister chan *Client
+	clients map[*WClient]bool
+
+	// Register requests from the clients.
+	register chan *WClient
+
+	// Unregister requests from clients.
+	unregister chan *WClient
+
+	rooms map[string][]*WClient
+
+	roomMessage chan map[string][]byte
+
+	roomName chan string
 }
 
 func getRoomName(userOneID, userTwoID int) (roomName string) {
@@ -58,6 +47,66 @@ func getRoomName(userOneID, userTwoID int) (roomName string) {
 	}
 	return fmt.Sprintf("room_%s", roomName)
 }
+
+func newHub() *Hub {
+
+	return &Hub{
+		roomMessage: make(chan map[string][]byte),
+		register:    make(chan *WClient),
+		unregister:  make(chan *WClient),
+		clients:     make(map[*WClient]bool),
+		rooms:       make(map[string][]*WClient),
+		roomName:    make(chan string),
+	}
+}
+
+func checkRoom(roomName string, client *WClient) map[string][]*WClient {
+	clients, created := theMap[roomName]
+	if created {
+		for _, regClient := range clients {
+			if regClient == client {
+				return theMap
+			}
+		}
+		clients = append(clients, client)
+		theMap[roomName] = clients
+		return theMap
+	}
+	theMap[roomName] = []*WClient{client}
+	return theMap
+}
+
+func (h *Hub) run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+			roomName := <-h.roomName
+			h.rooms = checkRoom(roomName, client)
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+			}
+		case incomingPL := <-h.roomMessage:
+			// Go through each rooms in the hub, check which room a message was dropped in and send messages there
+			for room, clients := range h.rooms {
+				if message, ok := incomingPL[room]; ok {
+					for _, client := range clients {
+						select {
+						case client.send <- message:
+						default:
+							close(client.send)
+							delete(h.clients, client)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+/*
 
 // NewHub Creates a new hub
 func NewHub() *Hub {

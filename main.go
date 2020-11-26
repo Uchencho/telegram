@@ -66,6 +66,7 @@ func main() {
 	// Websocket
 	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.WebSocketServer)))
 
+	log.Println("Running on address: ", defaultServerAddress)
 	if err := http.ListenAndServe(defaultServerAddress, router); err != http.ErrServerClosed {
 		log.Println(err)
 	}
