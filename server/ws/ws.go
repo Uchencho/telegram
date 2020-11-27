@@ -2,6 +2,7 @@ package ws
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -99,10 +100,10 @@ func (h *Hub) run() {
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
-
-				// Remove client from the room
-				// Check if the room is empty, if it is, delete the room
 				close(client.send)
+
+				roomName := <-h.roomName
+				cleanRoomAndClients(roomName, client)
 			}
 		case incomingPL := <-h.roomMessage:
 			// Go through each rooms in the hub, check which room a message was dropped in and send messages there
@@ -116,10 +117,29 @@ func (h *Hub) run() {
 							delete(h.clients, client)
 
 							// Remove client from room
+							cleanRoomAndClients(room, client)
 						}
 					}
 				}
 			}
 		}
+	}
+}
+
+func cleanRoomAndClients(roomName string, c *WClient) {
+	clients, found := roomAndClients[roomName]
+	if !found {
+		log.Println("Room does not exist... This should never happen by the way")
+		return
+	}
+
+	for i, client := range clients {
+		if client == c {
+			clients = append(clients[:i], clients[i+1:]...)
+		}
+	}
+
+	if len(clients) == 0 {
+		delete(roomAndClients, roomName)
 	}
 }

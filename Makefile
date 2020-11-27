@@ -19,5 +19,5 @@ local:
 build: clean local
 
 run-local:
-	go run main.go
+	go run -race main.go
 	

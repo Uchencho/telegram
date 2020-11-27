@@ -8,11 +8,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/auth"
 	"github.com/Uchencho/telegram/server/chat"
 	"github.com/Uchencho/telegram/server/utils"
-	"github.com/gorilla/websocket"
 )
 
 func (c *WClient) putMsgInRoom(user auth.User) {
@@ -70,6 +71,7 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 func (c *WClient) readMsgFromRoom(roomName string) {
 	defer func() {
 		c.hub.unregister <- c
+		c.hub.roomName <- roomName
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
