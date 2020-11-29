@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -13,6 +14,7 @@ var (
 	newline        = []byte(`\n`)
 	space          = []byte(` `)
 	roomAndClients = map[string][]*WClient{}
+	lock           sync.Mutex
 )
 
 const (
@@ -96,7 +98,11 @@ func (h *Hub) run() {
 		case client := <-h.register:
 			h.clients[client] = true
 			roomName := <-h.roomName
+
+			lock.Lock()
 			h.rooms = checkRoom(roomName, client)
+			lock.Unlock()
+
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
@@ -107,6 +113,8 @@ func (h *Hub) run() {
 			}
 		case incomingPL := <-h.roomMessage:
 			// Go through each rooms in the hub, check which room a message was dropped in and send messages there
+			lock.Lock()
+
 			for room, clients := range h.rooms {
 				if message, ok := incomingPL[room]; ok {
 					for _, client := range clients {
@@ -122,6 +130,8 @@ func (h *Hub) run() {
 					}
 				}
 			}
+
+			lock.Unlock()
 		}
 	}
 }

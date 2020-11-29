@@ -34,13 +34,13 @@ func getOrCreateThread(db *sql.DB, thread chat.Thread) (threadID int, err error)
 		return 0, errors.Wrap(err, "ws - could not start a database transaction")
 	}
 
-	query := `SELECT DISTINCT id FROM Thread WHERE firstUserID = ? OR secondUserID = ?;`
+	query := `SELECT DISTINCT id FROM Thread WHERE firstUserID = ? AND secondUserID = ? OR firstUserID = ? AND secondUserID = ?;`
 	prep, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return 0, errors.Wrap(err, "ws - could not prepare query within transaction")
 	}
 
-	row := prep.QueryRowContext(ctx, thread.FirstUserID, thread.SecondUserID)
+	row := prep.QueryRowContext(ctx, thread.FirstUserID, thread.SecondUserID, thread.SecondUserID, thread.FirstUserID)
 	switch err = row.Scan(&threadID); err {
 	case sql.ErrNoRows:
 		threadID = 0

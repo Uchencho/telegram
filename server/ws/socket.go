@@ -46,7 +46,7 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 				Chatmsg:  string(message),
 			}
 
-			// Concurrently store the message
+			// Concurrently store the message from client that sent to server
 			go storeMessage(db.Db, msg)
 
 			// Add queued chat messages to the current websocket message.
@@ -110,6 +110,11 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 	secondUserID, err := strconv.Atoi(userID)
 	if err != nil {
 		utils.InvalidJSONResp(w, err)
+		return
+	}
+
+	if secondUserID == int(user.ID) {
+		utils.InvalidJSONResp(w, errors.New("You cannot chat with yourself, be guided please"))
 		return
 	}
 
