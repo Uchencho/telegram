@@ -16,7 +16,7 @@ import (
 	"github.com/Uchencho/telegram/server/utils"
 )
 
-func (c *WClient) putMsgInRoom(user auth.User) {
+func (c *WClient) putMsgInRoom() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -24,7 +24,7 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
+		case pl, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -36,24 +36,24 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 			if err != nil {
 				return
 			}
-			w.Write(message)
+			w.Write(pl.message)
 
 			// Write to DB to store the chat
 			msg := chat.Message{
-				UserID:   int(user.ID),
-				Username: user.FirstName,
+				UserID:   pl.sender.userID,
+				Username: pl.sender.userName,
 				Thread:   c.Thread,
-				Chatmsg:  string(message),
+				Chatmsg:  string(pl.message),
 			}
 
-			// Concurrently store the message from client that sent to server
+			// Concurrently store the message from client.
 			go storeMessage(db.Db, msg)
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				w.Write(pl.message)
 			}
 
 			if err := w.Close(); err != nil {
@@ -68,10 +68,9 @@ func (c *WClient) putMsgInRoom(user auth.User) {
 	}
 }
 
-func (c *WClient) readMsgFromRoom(roomName string) {
+func (c *WClient) readMsgFromRoom(roomName string, user auth.User) {
 	defer func() {
 		c.hub.unregister <- c
-		c.hub.roomName <- roomName
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -85,11 +84,14 @@ func (c *WClient) readMsgFromRoom(roomName string) {
 			}
 			break
 		}
+
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		pl := map[string][]byte{
-			roomName: message,
+		wsPL := wsPayload{
+			sender:   c,
+			message:  message,
+			roomName: roomName,
 		}
-		c.hub.roomMessage <- pl
+		c.hub.roomMessage <- wsPL
 	}
 }
 
@@ -118,7 +120,7 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Get for create room for two users to communicate
+	// Get or create room for two users to communicate
 	roomName := getRoomName(int(user.ID), secondUserID)
 
 	threadInput := chat.Thread{
@@ -152,10 +154,17 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 	hub := newHub()
 	go hub.run()
 
-	client := &WClient{hub: hub, conn: conn, Thread: threadID, send: make(chan []byte, 256)}
+	client := &WClient{
+		hub:      hub,
+		conn:     conn,
+		Thread:   threadID,
+		userID:   int(user.ID),
+		userName: user.FirstName,
+		roomName: roomName,
+		send:     make(chan wsPayload),
+	}
 	client.hub.register <- client
-	client.hub.roomName <- roomName
 
-	go client.putMsgInRoom(user)
-	go client.readMsgFromRoom(roomName)
+	go client.putMsgInRoom()
+	go client.readMsgFromRoom(roomName, user)
 }

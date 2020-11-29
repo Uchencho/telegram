@@ -26,10 +26,19 @@ const (
 
 // WClient is a representation of a websocket client
 type WClient struct {
-	hub    *Hub
-	conn   *websocket.Conn
-	send   chan []byte
-	Thread int
+	hub      *Hub
+	conn     *websocket.Conn
+	send     chan wsPayload
+	Thread   int
+	userName string
+	userID   int
+	roomName string
+}
+
+type wsPayload struct {
+	sender   *WClient
+	roomName string
+	message  []byte
 }
 
 // Hub is a representation of a hub
@@ -42,14 +51,8 @@ type Hub struct {
 	// Unregister requests from clients.
 	unregister chan *WClient
 
-	// rooms maps a room to a list of clients
-	rooms map[string][]*WClient
-
-	// roomMessage is a channel that sends a message into a specific room
-	roomMessage chan map[string][]byte
-
-	// roomName is the name of a room the client is connecting to
-	roomName chan string
+	// roomMessage is a channel that sends a wsPayload into a specific room
+	roomMessage chan wsPayload
 }
 
 func getRoomName(userOneID, userTwoID int) (roomName string) {
@@ -67,29 +70,28 @@ func getRoomName(userOneID, userTwoID int) (roomName string) {
 func newHub() *Hub {
 
 	return &Hub{
-		roomMessage: make(chan map[string][]byte),
+		roomMessage: make(chan wsPayload),
 		register:    make(chan *WClient),
 		unregister:  make(chan *WClient),
 		clients:     make(map[*WClient]bool),
-		rooms:       make(map[string][]*WClient),
-		roomName:    make(chan string),
 	}
 }
 
-func checkRoom(roomName string, client *WClient) map[string][]*WClient {
+// checkRoom checks if a room has been created and if the client has been put in the room
+func checkRoom(roomName string, client *WClient) {
 	clients, created := roomAndClients[roomName]
 	if created {
 		for _, regClient := range clients {
 			if regClient == client {
-				return roomAndClients
+				return
 			}
 		}
 		clients = append(clients, client)
 		roomAndClients[roomName] = clients
-		return roomAndClients
+		return
 	}
 	roomAndClients[roomName] = []*WClient{client}
-	return roomAndClients
+	return
 }
 
 func (h *Hub) run() {
@@ -97,10 +99,9 @@ func (h *Hub) run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			roomName := <-h.roomName
 
 			lock.Lock()
-			h.rooms = checkRoom(roomName, client)
+			checkRoom(client.roomName, client)
 			lock.Unlock()
 
 		case client := <-h.unregister:
@@ -108,29 +109,26 @@ func (h *Hub) run() {
 				delete(h.clients, client)
 				close(client.send)
 
-				roomName := <-h.roomName
-				cleanRoomAndClients(roomName, client)
+				cleanRoomAndClients(client.roomName, client)
 			}
 		case incomingPL := <-h.roomMessage:
-			// Go through each rooms in the hub, check which room a message was dropped in and send messages there
-			lock.Lock()
 
-			for room, clients := range h.rooms {
-				if message, ok := incomingPL[room]; ok {
-					for _, client := range clients {
+			lock.Lock()
+			if clients, ok := roomAndClients[incomingPL.roomName]; ok {
+				for _, client := range clients {
+					if incomingPL.sender != client {
 						select {
-						case client.send <- message:
+						case client.send <- incomingPL:
 						default:
 							close(client.send)
 							delete(h.clients, client)
 
 							// Remove client from room
-							cleanRoomAndClients(room, client)
+							cleanRoomAndClients(incomingPL.roomName, client)
 						}
 					}
 				}
 			}
-
 			lock.Unlock()
 		}
 	}
