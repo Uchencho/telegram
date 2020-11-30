@@ -135,6 +135,7 @@ func cleanRoomAndClients(roomName string, c *WClient) {
 		if client == c {
 			clients = append(clients[:i], clients[i+1:]...)
 			close(client.send)
+			roomAndClients[roomName] = clients
 		}
 	}
 
