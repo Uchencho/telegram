@@ -14,6 +14,7 @@ var (
 	newline        = []byte(`\n`)
 	space          = []byte(` `)
 	roomAndClients = map[string][]*WClient{}
+	globalHUB      = newHub()
 	lock           sync.Mutex
 )
 
@@ -43,7 +44,6 @@ type wsPayload struct {
 
 // Hub is a representation of a hub
 type Hub struct {
-	clients map[*WClient]bool
 
 	// Register requests from the clients.
 	register chan *WClient
@@ -73,7 +73,6 @@ func newHub() *Hub {
 		roomMessage: make(chan wsPayload),
 		register:    make(chan *WClient),
 		unregister:  make(chan *WClient),
-		clients:     make(map[*WClient]bool),
 	}
 }
 
@@ -98,19 +97,14 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client] = true
 
 			lock.Lock()
 			checkRoom(client.roomName, client)
 			lock.Unlock()
 
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.send)
+			cleanRoomAndClients(client.roomName, client)
 
-				cleanRoomAndClients(client.roomName, client)
-			}
 		case incomingPL := <-h.roomMessage:
 
 			lock.Lock()
@@ -120,10 +114,6 @@ func (h *Hub) run() {
 						select {
 						case client.send <- incomingPL:
 						default:
-							close(client.send)
-							delete(h.clients, client)
-
-							// Remove client from room
 							cleanRoomAndClients(incomingPL.roomName, client)
 						}
 					}
@@ -144,6 +134,7 @@ func cleanRoomAndClients(roomName string, c *WClient) {
 	for i, client := range clients {
 		if client == c {
 			clients = append(clients[:i], clients[i+1:]...)
+			close(client.send)
 		}
 	}
 

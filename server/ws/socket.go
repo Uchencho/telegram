@@ -16,6 +16,10 @@ import (
 	"github.com/Uchencho/telegram/server/utils"
 )
 
+func init() {
+	go globalHUB.run()
+}
+
 func (c *WClient) putMsgInRoom() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -151,11 +155,8 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	hub := newHub()
-	go hub.run()
-
 	client := &WClient{
-		hub:      hub,
+		hub:      globalHUB,
 		conn:     conn,
 		Thread:   threadID,
 		userID:   int(user.ID),
