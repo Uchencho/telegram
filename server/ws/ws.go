@@ -103,7 +103,10 @@ func (h *Hub) run() {
 			lock.Unlock()
 
 		case client := <-h.unregister:
+
+			lock.Lock()
 			cleanRoomAndClients(client.roomName, client)
+			lock.Unlock()
 
 		case incomingPL := <-h.roomMessage:
 
