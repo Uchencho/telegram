@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// RegisterUser is a representation of a request body to register a user
 type RegisterUser struct {
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required"`
@@ -23,10 +25,11 @@ type RegisterUser struct {
 	DeviceID        string `json:"device_id,omitempty"`
 }
 
+// User is a representation of a user
 type User struct {
 	ID             uint      `json:"id"`
-	Email          string    `json:"email"`
-	HashedPassword string    `json:"password"`
+	Email          string    `json:"email" validate:"required,email"`
+	HashedPassword string    `json:"password,omitempty"`
 	FirstName      string    `json:"first_name"`
 	PhoneNumber    string    `json:"phone_number"`
 	UserAddress    string    `json:"user_address"`
@@ -38,18 +41,18 @@ type User struct {
 	DeviceID       string    `json:"device_id"`
 }
 
+// Key is a representation of the expected type to decode the context passed
 type Key string
-
-const (
-	frontEndOrigin string = "*"
-)
 
 var (
 	signingKey        = []byte(os.Getenv("SIGNING_KEY"))
 	refreshSigningKey = []byte(os.Getenv("REFRESH_SIGNING_KEY"))
+
+	// FrontEndOrigin is the origin of the consumer
+	FrontEndOrigin string = os.Getenv("FRONT_ORIGIN")
 )
 
-// Hashes a password
+// HashPassword Hashes a password
 func HashPassword(password string) (string, error) {
 	if len(password) < 1 {
 		return "", errors.New("Cant hash an empty string")
@@ -58,7 +61,7 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-// Checks the password and the hash, returns a non nil error if not the same
+// CheckPasswordHash Checks the password and the hash, returns a non nil error if not the same
 func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err
@@ -97,7 +100,7 @@ func getUser(db *sql.DB, email string) (User, error) {
 	}
 }
 
-// Generates an acess and refresh token on authentication
+// GenerateToken Generates an acess and refresh token on authentication
 func GenerateToken(email string) (string, string, error) {
 
 	if len(email) == 0 {
@@ -149,7 +152,26 @@ func checkAccessToken(accessToken string) (interface{}, error) {
 	return "", errors.New("Credentials not provided")
 }
 
-// Middleware that checks if a token was passed
+// CheckRefreshToken checks if the refresh token passed is correct
+func CheckRefreshToken(refreshToken string) (interface{}, error) {
+	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("An error occurred")
+		}
+		return refreshSigningKey, nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims["client"], nil
+	}
+	return "", errors.New("Credentials not provided")
+}
+
+// BasicToken is a Middleware that checks if a token was passed
 func BasicToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -162,26 +184,25 @@ func BasicToken(next http.Handler) http.Handler {
 			}
 
 			accessToken := strings.Split(r.Header["Authorization"][0], " ")[1]
-			basic_token := os.Getenv("BASIC_TOKEN")
-			if basic_token == accessToken {
+			basicToken := os.Getenv("BASIC_TOKEN")
+			if basicToken == accessToken {
 
 				//Allow CORS here By or specific origin
-				w.Header().Set("Access-Control-Allow-Origin", frontEndOrigin)
+				w.Header().Set("Access-Control-Allow-Origin", FrontEndOrigin)
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 				next.ServeHTTP(w, r)
 				return
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-				fmt.Fprint(w, `{"error" : "Invalid token passed"}`)
-				return
 			}
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, `{"error" : "Invalid token passed"}`)
+			return
 		}
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, `{"error" : "Token not passed"}`)
 	})
 }
 
-// Middleware that returns the details of the user
+// UserMiddleware is a Middleware that returns the details of the user
 func UserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -217,7 +238,7 @@ func UserMiddleware(next http.Handler) http.Handler {
 			ctx := context.WithValue(req.Context(), userKey, user)
 
 			//Allow CORS here By or specific origin
-			w.Header().Set("Access-Control-Allow-Origin", frontEndOrigin)
+			w.Header().Set("Access-Control-Allow-Origin", FrontEndOrigin)
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 			next.ServeHTTP(w, req.WithContext(ctx))
 			return
@@ -225,4 +246,68 @@ func UserMiddleware(next http.Handler) http.Handler {
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, `{"error" : "Token not passed"}`)
 	})
+}
+
+// WebsocketAuthMiddleware retrieves the user details using authentication specific for websocket requests
+func WebsocketAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		urlVals := r.URL.Query()
+		if token := urlVals.Get("token"); token != "" {
+
+			email, err := checkAccessToken(token)
+			if err != nil && "Token is expired" == err.Error() {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "Token has expired please login"}`)
+				return
+			} else if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "Invalid token"}`)
+				return
+			}
+
+			// Retrieve the user and pass it into a context, to do!
+			user, err := getUser(db.Db, fmt.Sprint(email))
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprint(w, `{"error" : "User does not exist"}`)
+				return
+			}
+
+			const userKey Key = "user"
+			ctx := context.WithValue(r.Context(), userKey, user)
+
+			//Allow CORS here By or specific origin
+			w.Header().Set("Access-Control-Allow-Origin", FrontEndOrigin)
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		log.Println("User details not passed")
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"error" : "Token not passed"}`)
+	})
+}
+
+// UnauthorizedResponse is a Forbidden utility response
+func UnauthorizedResponse(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusForbidden)
+	fmt.Fprint(w, `{"error" : "Invalid authentication credentials"}`)
+}
+
+// NewAccessToken Creates a new access token only
+func NewAccessToken(email string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["client"] = email
+	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
+
+	accessToken, err := token.SignedString(signingKey)
+	if err != nil {
+		return "", err
+	}
+	return accessToken, nil
 }

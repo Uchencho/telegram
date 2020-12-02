@@ -1,0 +1,665 @@
+{
+	"info": {
+		"_postman_id": "df55dac4-75ac-4ff3-801e-04bae15c18ca",
+		"name": "Telegram",
+		"description": "Chat API written in Golang",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "profile",
+			"item": [
+				{
+					"name": "user profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						},
+						"description": "Retrieve the details of a specific user profile"
+					},
+					"response": [
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/profile",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"profile"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 08 Nov 2020 07:32:09 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "252"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"email\": \"aloziekelechi17@gmail.com\",\n        \"first_name\": \"\",\n        \"phone_number\": \"\",\n        \"user_address\": \"\",\n        \"is_active\": true,\n        \"date_joined\": \"2020-11-07T19:23:23Z\",\n        \"last_login\": \"2020-11-08T06:55:14Z\",\n        \"access_token\": \"\",\n        \"refresh_token\": \"\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "edit profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\" : \"Uchencho\",\n    \"phone_number\" : \"09087569990\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						},
+						"description": "Edit user profile"
+					},
+					"response": [
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"first_name\" : \"Uchencho\",\n    \"phone_number\" : \"09087569990\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/profile",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"profile"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 08 Nov 2020 07:46:48 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "278"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"email\": \"aloziekelechi17@gmail.com\",\n        \"first_name\": \"Uchencho\",\n        \"phone_number\": \"09087569990\",\n        \"user_address\": \"\",\n        \"is_active\": true,\n        \"date_joined\": \"2020-11-07T19:23:23Z\",\n        \"last_login\": \"2020-11-08T06:55:14Z\",\n        \"longitude\": \"\",\n        \"latitude\": \"\",\n        \"device_id\": \"\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints relating to the profile of the user",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ee9076ce-60e9-4813-8bf6-3d3464253240",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "27941295-5649-4587-aa29-232c32f12f86",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "utils",
+			"item": [
+				{
+					"name": "login",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"aloziekelechi17@gmail.com\",\n    \"password\" : \"jannelle\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Login a user"
+					},
+					"response": [
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\" : \"aloziekelechi17@gmail.com\",\n    \"password\" : \"jannelle\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 20 Oct 2020 13:14:43 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "610"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"email\": \"aloziekelechi17@gmail.com\",\n        \"first_name\": \"\",\n        \"phone_number\": \"\",\n        \"user_address\": \"\",\n        \"is_active\": true,\n        \"date_joined\": \"2020-10-19T15:52:57Z\",\n        \"last_login\": \"2020-10-19T15:52:57Z\",\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjAzMjA2ODgzfQ.FTjY63HQXo6C_iaLjLL2AkF_gxqlcLZspUhXnrGohQc\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjAzMjI4NDgzfQ.f42XNDfyCIHPSpiXcWE8gM8i_xwNfCJNt58PxxY4-qg\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "register User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"register"
+							]
+						},
+						"description": "Register a user"
+					},
+					"response": [
+						{
+							"name": "sample error response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"aloziekelechi17@gmail.com\",\n  \"password\": \"jannelle\",\n  \"confirm_password\": \"jannelle\",\n  \"device_id\": \"fcm-noti\",\n  \"phone_number\" : \"+2348154579866\",\n  \"first_name\" : \"Uchencho\",\n  \"longitude\" : \"6.5973\",\n  \"latitude\" : \"3.3904\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/register",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 19 Oct 2020 15:56:00 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "47"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": \"User already exists, please login\"\n}"
+						}
+					]
+				},
+				{
+					"name": "refresh token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\" : \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJjbGllbnQiOiJhbG96aWVrZWxlY2hpMTdAZ21haWwuY29tIiwiZXhwIjoxNjA0ODA1ODI1fQ.FZzBVOmS228Lw-aJoNlDLHN11UWZksqSvoKzdraE2qc\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"refresh"
+							]
+						},
+						"description": "Refresh the access token on expiry"
+					},
+					"response": []
+				}
+			],
+			"description": "Neccessary utilities like registration and login",
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "chat",
+			"item": [
+				{
+					"name": "history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chat",
+								"history"
+							]
+						},
+						"description": "Retrieve chat history for a user"
+					},
+					"response": [
+						{
+							"name": "sample empty response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/chat/history",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"chat",
+										"history"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 08 Nov 2020 09:46:44 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "31"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "messages",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\" : 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat/history/messages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chat",
+								"history",
+								"messages"
+							]
+						},
+						"description": "List of a messages between two users in a thread"
+					},
+					"response": [
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\" : 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/chat/history/messages",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"chat",
+										"history",
+										"messages"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 15 Nov 2020 10:33:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "268"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Hello\",\n            \"input_time\": \"2020-11-15T11:32:16Z\"\n        },\n        {\n            \"id\": 2,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Communicating effectively\",\n            \"input_time\": \"2020-11-15T11:33:13Z\"\n        }\n    ]\n}"
+						},
+						{
+							"name": "sample success response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\" : 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/chat/history/messages",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"chat",
+										"history",
+										"messages"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Content-Type"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 15 Nov 2020 10:33:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "268"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"success\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Hello\",\n            \"input_time\": \"2020-11-15T11:32:16Z\"\n        },\n        {\n            \"id\": 2,\n            \"thread\": 1,\n            \"user_id\": 1,\n            \"user_name\": \"Uchencho\",\n            \"message\": \"Communicating effectively\",\n            \"input_time\": \"2020-11-15T11:33:13Z\"\n        }\n    ]\n}"
+						}
+					]
+				}
+			],
+			"description": "All endpoints regarding chat",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ef5610af-fa4f-44f2-a9a8-239b49a9fbaf",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "6f934cfa-fb66-45e1-9425-c6ad5e503c86",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

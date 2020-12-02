@@ -8,11 +8,20 @@ import (
 	"time"
 
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/pkg/errors"
 )
 
 type loginInfo struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
+}
+
+type refreshT struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type accessT struct {
+	AccessToken string `json:"access_token"`
 }
 
 type loginResponse struct {
@@ -24,10 +33,11 @@ type loginResponse struct {
 	IsActive     bool      `json:"is_active"`
 	DateJoined   time.Time `json:"date_joined"`
 	LastLogin    time.Time `json:"last_login"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
+	AccessToken  string    `json:"access_token,omitempty"`
+	RefreshToken string    `json:"refresh_token,omitempty"`
 }
 
+// AddRecordToUserTable adds a record to the db
 func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 	query := `INSERT INTO Users (
 		email, hashed_password, date_joined, last_login, is_active, first_name,
@@ -38,8 +48,7 @@ func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 
 	prep, err := db.Prepare(query)
 	if err != nil {
-		log.Printf("Error occured in preparing query, %v", err)
-		return err
+		return errors.Wrap(err, "Error occured in preparing query")
 	}
 
 	_, err = prep.Exec(user.Email, user.HashedPassword,
@@ -48,7 +57,7 @@ func AddRecordToUserTable(db *sql.DB, user auth.User) error {
 	return err
 }
 
-// Queries the customer's entire details and updates the laast login field if customer exist, using db transactions
+// GetUserLogin Queries the customer's entire details and updates the laast login field if customer exist, using db transactions
 func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 
 	ctx := context.Background()
@@ -65,10 +74,9 @@ func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 		address interface{}
 	)
 
-	prep, err := db.PrepareContext(ctx, query)
+	prep, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		log.Printf("Error occured in preparing query, %v", err)
-		return auth.User{}, err
+		return auth.User{}, errors.Wrap(err, "Error occured in preparing query")
 	}
 	row := prep.QueryRowContext(ctx, email)
 	switch err := row.Scan(&user.ID, &user.Email, &user.HashedPassword,
@@ -106,4 +114,18 @@ func GetUserLogin(db *sql.DB, email string) (auth.User, error) {
 		return auth.User{}, err
 	}
 	return user, nil
+}
+
+// UpdateUserRecord updates the first name and phone number of a user
+func UpdateUserRecord(db *sql.DB, user auth.User) error {
+	query := `UPDATE Users SET first_name = ?, phone_number = ? WHERE email = ?;`
+	prep, err := db.Prepare(query)
+	if err != nil {
+		return errors.Wrap(err, "account - Could not prepare query")
+	}
+	_, err = prep.Exec(user.FirstName, user.PhoneNumber, user.Email)
+	if err != nil {
+		return errors.Wrap(err, "account - Could not execute query")
+	}
+	return nil
 }

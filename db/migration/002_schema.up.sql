@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS Thread (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstUserID INT,
+    firstUsername VARCHAR(200),
+    secondUserID INT,
+    secondUsername VARCHAR(200),
+    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ChatMessage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT,
+    username VARCHAR(200),
+    thread INT,
+    chatmsg TEXT,
+    inputTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
