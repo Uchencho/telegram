@@ -144,7 +144,7 @@ func GetUser(db *sql.DB) RetrieveUserLoginDetailsFunc {
 }
 
 // ChatThreadsByUser retrieves the thread a user has participated in
-func ChatThreadsByUser(db *sql.DB) RetrieveUserThreads {
+func ChatThreadsByUser(db *sql.DB) RetrieveUserThreadsFunc {
 	return func(user User) ([]Thread, error) {
 		query := `SELECT DISTINCT * FROM Thread WHERE firstUserID = ? OR secondUserID = ?;`
 		prep, err := db.Prepare(query)
@@ -171,7 +171,7 @@ func ChatThreadsByUser(db *sql.DB) RetrieveUserThreads {
 }
 
 // GetMessages retrieves a list of messages in a specific thread
-func GetMessages(db *sql.DB) RetrieveMessages {
+func GetMessages(db *sql.DB) RetrieveMessagesFunc {
 	return func(threadID int) ([]Message, error) {
 		query := `SELECT * FROM ChatMessage WHERE thread = ?;`
 		prep, err := db.Prepare(query)
@@ -194,5 +194,79 @@ func GetMessages(db *sql.DB) RetrieveMessages {
 			msgs = append(msgs, aMsg)
 		}
 		return msgs, nil
+	}
+}
+
+// StoreMessage inserts a message into the DB. Error checking is NOT properly handled
+func StoreMessage(db *sql.DB) InsertMessageFunc {
+	return func(msg Message) {
+		query := `INSERT INTO ChatMessage (
+			userID, username, thread, chatmsg
+		) VALUES (
+			?, ?, ?, ?
+		);`
+
+		prep, err := db.Prepare(query)
+		if err != nil {
+			log.Println("ws - Could not prepare query")
+		}
+
+		_, err = prep.Exec(msg.UserID, msg.Username, msg.Thread, msg.Chatmsg)
+		if err != nil {
+			log.Println("ws - Could not execute query")
+		}
+	}
+}
+
+// GetOrCreateThread retrieves a thread from the DB or creates one
+func GetOrCreateThread(db *sql.DB) GetorCreateThreadFunc {
+	return func(thread Thread) (threadID int, err error) {
+		ctx := context.Background()
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return 0, errors.Wrap(err, "ws - could not start a database transaction")
+		}
+
+		query := `SELECT DISTINCT id FROM Thread WHERE firstUserID = ? AND secondUserID = ? OR firstUserID = ? AND secondUserID = ?;`
+		prep, err := tx.PrepareContext(ctx, query)
+		if err != nil {
+			return 0, errors.Wrap(err, "ws - could not prepare query within transaction")
+		}
+
+		row := prep.QueryRowContext(ctx, thread.FirstUserID, thread.SecondUserID, thread.SecondUserID, thread.FirstUserID)
+		switch err = row.Scan(&threadID); err {
+		case sql.ErrNoRows:
+			threadID = 0
+		case nil:
+			if threadID != 0 {
+				return threadID, nil
+			}
+		}
+
+		if threadID == 0 {
+			query = `INSERT INTO Thread (
+			firstUserID, firstUsername, secondUserID, secondUsername
+		) VALUES (
+			?, ?, ?, ?
+		);`
+
+			prep, err := tx.PrepareContext(ctx, query)
+			if err != nil {
+				return 0, errors.Wrap(err, "ws - could not prepare query within transaction")
+			}
+			result, err := prep.ExecContext(ctx, thread.FirstUserID, thread.FirstUsername, thread.SecondUserID,
+				thread.SecondUsername)
+
+			lastID, err := result.LastInsertId()
+			if err != nil {
+				return 0, errors.Wrap(err, "ws - could not retrieve last inserted ID")
+			}
+			err = tx.Commit()
+			if err != nil {
+				return 0, errors.Wrap(err, "ws - could not commit transaction into DB")
+			}
+			return int(lastID), nil
+		}
+		return threadID, err
 	}
 }

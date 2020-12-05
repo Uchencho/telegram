@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/utils"
 )
@@ -19,7 +18,7 @@ func init() {
 	go globalHUB.run()
 }
 
-func (c *WClient) putMsgInRoom() {
+func (c *WClient) putMsgInRoom(insertMsg database.InsertMessageFunc) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -50,7 +49,7 @@ func (c *WClient) putMsgInRoom() {
 			}
 
 			// Concurrently store the message from client.
-			go storeMessage(db.Db, msg)
+			go insertMsg(msg)
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
@@ -99,72 +98,73 @@ func (c *WClient) readMsgFromRoom(roomName string, user database.User) {
 }
 
 // WebSocketServer is a handler that connects a user for constant communication
-func WebSocketServer(w http.ResponseWriter, req *http.Request) {
+func WebSocketServer(insertMsg database.InsertMessageFunc, getThread database.GetorCreateThreadFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		// Retrieve user from context
+		user := utils.GetUserFromRequestContext(w, req)
 
-	// Retrieve user from context
-	user := utils.GetUserFromRequestContext(w, req)
+		urlValues := req.URL.Query()
+		username := urlValues.Get("receiver_username")
+		userID := urlValues.Get("receiver_id")
+		if username == "" || userID == "" {
+			utils.InvalidJSONResp(w, errors.New("Invalid query parameters passed"))
+			return
+		}
 
-	urlValues := req.URL.Query()
-	username := urlValues.Get("receiver_username")
-	userID := urlValues.Get("receiver_id")
-	if username == "" || userID == "" {
-		utils.InvalidJSONResp(w, errors.New("Invalid query parameters passed"))
-		return
+		secondUserID, err := strconv.Atoi(userID)
+		if err != nil {
+			utils.InvalidJSONResp(w, err)
+			return
+		}
+
+		if secondUserID == int(user.ID) {
+			utils.InvalidJSONResp(w, errors.New("You cannot chat with yourself, be guided please"))
+			return
+		}
+
+		// Get or create room for two users to communicate
+		roomName := getRoomName(int(user.ID), secondUserID)
+
+		threadInput := database.Thread{
+			FirstUserID:    int(user.ID),
+			FirstUsername:  user.FirstName,
+			SecondUserID:   secondUserID,
+			SecondUsername: username,
+		}
+
+		threadID, err := getThread(threadInput)
+		if err != nil {
+			utils.InternalIssues(w, err)
+			return
+		}
+
+		// Upgrade to websocket connection
+		upgrader := websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		}
+
+		conn, err := upgrader.Upgrade(w, req, nil)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		client := &WClient{
+			hub:      globalHUB,
+			conn:     conn,
+			Thread:   threadID,
+			userID:   int(user.ID),
+			userName: user.FirstName,
+			roomName: roomName,
+			send:     make(chan wsPayload),
+		}
+		client.hub.register <- client
+
+		go client.putMsgInRoom(insertMsg)
+		go client.readMsgFromRoom(roomName, user)
 	}
-
-	secondUserID, err := strconv.Atoi(userID)
-	if err != nil {
-		utils.InvalidJSONResp(w, err)
-		return
-	}
-
-	if secondUserID == int(user.ID) {
-		utils.InvalidJSONResp(w, errors.New("You cannot chat with yourself, be guided please"))
-		return
-	}
-
-	// Get or create room for two users to communicate
-	roomName := getRoomName(int(user.ID), secondUserID)
-
-	threadInput := database.Thread{
-		FirstUserID:    int(user.ID),
-		FirstUsername:  user.FirstName,
-		SecondUserID:   secondUserID,
-		SecondUsername: username,
-	}
-
-	threadID, err := getOrCreateThread(db.Db, threadInput)
-	if err != nil {
-		utils.InternalIssues(w, err)
-		return
-	}
-
-	// Upgrade to websocket connection
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-
-	conn, err := upgrader.Upgrade(w, req, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	client := &WClient{
-		hub:      globalHUB,
-		conn:     conn,
-		Thread:   threadID,
-		userID:   int(user.ID),
-		userName: user.FirstName,
-		roomName: roomName,
-		send:     make(chan wsPayload),
-	}
-	client.hub.register <- client
-
-	go client.putMsgInRoom()
-	go client.readMsgFromRoom(roomName, user)
 }

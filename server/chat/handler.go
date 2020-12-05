@@ -10,7 +10,7 @@ import (
 )
 
 // History is the handler that returns the list of users a specific user has contacted
-func History(getThreads database.RetrieveUserThreads) http.HandlerFunc {
+func History(getThreads database.RetrieveUserThreadsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		user := utils.GetUserFromRequestContext(w, req)
 
@@ -52,7 +52,7 @@ func History(getThreads database.RetrieveUserThreads) http.HandlerFunc {
 }
 
 // MessageHistory is a handler that return all the messages that was sent in a thread
-func MessageHistory(getMessages database.RetrieveMessages) http.HandlerFunc {
+func MessageHistory(getMessages database.RetrieveMessagesFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodPost:

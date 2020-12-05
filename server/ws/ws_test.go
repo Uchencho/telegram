@@ -5,9 +5,7 @@ import (
 	"testing"
 
 	"github.com/Uchencho/telegram/db"
-	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetorCreateThread(t *testing.T) {
@@ -20,12 +18,5 @@ func TestGetorCreateThread(t *testing.T) {
 	}()
 
 	db.MigrateDB(testDb)
-
-	thread := database.Thread{}
-	_, err := getOrCreateThread(testDb, thread)
-
-	if assert.Error(t, err) {
-		assert.Equal(t, nil, err)
-	}
 
 }
