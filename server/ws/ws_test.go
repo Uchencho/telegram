@@ -17,6 +17,9 @@ func TestGetorCreateThread(t *testing.T) {
 		testutils.DropDB()
 	}()
 
-	db.MigrateDB(testDb)
+	defer testDb.Close()
+
+	driver := testutils.GetTestDriver(testDb)
+	db.MigrateDB(testDb, driver, "sqlite3")
 
 }

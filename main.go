@@ -1,13 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Uchencho/telegram/db"
 	"github.com/Uchencho/telegram/server/app"
 
+	"github.com/golang-migrate/migrate/v4/database/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -37,15 +40,25 @@ func init() {
 	}
 }
 
+func inititeMYSQL() *sql.DB {
+	mySQL := db.ConnectDatabase()
+	driver, err := mysql.WithInstance(mySQL, &mysql.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect with error %s", err)
+	}
+
+	currentDB := os.Getenv("DB_NAME")
+	db.MigrateDB(mySQL, driver, currentDB)
+	return mySQL
+}
+
 func main() {
 
-	mySQL := db.ConnectDatabase()
-
+	mySQL := inititeMYSQL()
 	defer func() {
 		mySQL.Close()
 		fmt.Println("Db closed")
 	}()
-	db.MigrateDB(mySQL)
 
 	a := app.NewApp(mySQL)
 

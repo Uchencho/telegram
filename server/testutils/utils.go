@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+
 	// Sqlite3
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,6 +26,15 @@ func CreateDB() *sql.DB {
 	}
 	log.Println("DB Open")
 	return db
+}
+
+// GetTestDriver returns a mysql testdriver for migration
+func GetTestDriver(db *sql.DB) database.Driver {
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	if err != nil {
+		log.Fatal("Could not get sqlite2 driver for test", err)
+	}
+	return driver
 }
 
 // DropDB returns the functionality to drop the DB
