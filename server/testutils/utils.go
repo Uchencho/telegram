@@ -19,13 +19,15 @@ func CreateDB() *sql.DB {
 
 	db, err := sql.Open("sqlite3", "test_database.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to open DB with err", err)
 	}
+	log.Println("DB Open")
 	return db
 }
 
 // DropDB returns the functionality to drop the DB
 func DropDB() {
+	log.Println("Called dropDB")
 	err := os.Remove("test_database.db")
 	if err != nil {
 		log.Println("File does not exist")

@@ -39,13 +39,15 @@ func init() {
 
 func main() {
 
+	mySQL := db.ConnectDatabase()
+
 	defer func() {
-		db.Db.Close()
+		mySQL.Close()
 		fmt.Println("Db closed")
 	}()
-	db.MigrateDB(db.Db)
+	db.MigrateDB(mySQL)
 
-	a := app.NewApp(db.Db)
+	a := app.NewApp(mySQL)
 
 	log.Println("Running on address: ", defaultServerAddress)
 	if err := http.ListenAndServe(defaultServerAddress, a.Handler()); err != http.ErrServerClosed {

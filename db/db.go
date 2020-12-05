@@ -41,6 +41,3 @@ func ConnectDatabase() *sql.DB {
 	fmt.Println("Connected successfully")
 	return db
 }
-
-// Db is exported to give the functionality of interacting with the database
-var Db = ConnectDatabase()
