@@ -35,8 +35,11 @@ type Option struct {
 	GetThread         database.GetorCreateThreadFunc
 }
 
+// Options is a type for application options to modify the app
+type Options func(o *Option)
+
 // NewApp returns a new application
-func NewApp(provideDB interface{}) App {
+func NewApp(provideDB interface{}, options ...Options) App {
 
 	o := Option{
 		GetUserLogin:      database.GetUserLogin(provideDB),
@@ -46,6 +49,10 @@ func NewApp(provideDB interface{}) App {
 		GetMessages:       database.GetMessages(provideDB),
 		InsertMsg:         database.StoreMessage(provideDB),
 		GetThread:         database.GetOrCreateThread(provideDB),
+	}
+
+	for _, option := range options {
+		option(&o)
 	}
 
 	regHandler := auth.BasicToken(http.HandlerFunc(account.Register(o.AddNewUser)))
