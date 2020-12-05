@@ -14,8 +14,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const defaultServerAddress = "127.0.0.1:8000"
-
 // App is a representation of the set of functionalities for the app
 type App struct {
 	RegisterHandler       http.HandlerFunc
