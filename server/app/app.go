@@ -32,6 +32,8 @@ type Option struct {
 	GetUserLogin      database.RetrieveUserLoginDetailsFunc
 	UpdateUserDetails database.UpdateUserDetailsFunc
 	AddNewUser        database.AddUserToDBFunc
+	GetUserThreads    database.RetrieveUserThreads
+	GetMessages       database.RetrieveMessages
 }
 
 // NewApp returns a new application
@@ -41,14 +43,16 @@ func NewApp(provideDB *sql.DB) App {
 		GetUserLogin:      database.GetUserLogin(provideDB),
 		UpdateUserDetails: database.UpdateUserRecord(provideDB),
 		AddNewUser:        database.AddRecordToUserTable(provideDB),
+		GetUserThreads:    database.ChatThreadsByUser(provideDB),
+		GetMessages:       database.GetMessages(provideDB),
 	}
 
 	regHandler := auth.BasicToken(http.HandlerFunc(account.Register(o.AddNewUser)))
 	loginHandler := auth.BasicToken(http.HandlerFunc(account.Login(o.GetUserLogin)))
 	refreshT := account.RefreshToken()
 	userProfileHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(account.UserProfile(o.UpdateUserDetails)))
-	chatHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.History))
-	messageHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.MessageHistory))
+	chatHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.History(o.GetUserThreads)))
+	messageHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.MessageHistory(o.GetMessages)))
 	wsHandler := auth.WebsocketAuthMiddleware(o.GetUserLogin, http.HandlerFunc(ws.WebSocketServer))
 
 	return App{

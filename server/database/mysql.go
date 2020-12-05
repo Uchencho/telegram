@@ -143,52 +143,56 @@ func GetUser(db *sql.DB) RetrieveUserLoginDetailsFunc {
 	}
 }
 
-// ChatThreadsByUser retrieves the thread has participated in
-func ChatThreadsByUser(db *sql.DB, user User) ([]Thread, error) {
-	query := `SELECT DISTINCT * FROM Thread WHERE firstUserID = ? OR secondUserID = ?;`
-	prep, err := db.Prepare(query)
-	if err != nil {
-		return []Thread{}, errors.Wrap(err, "chat - could not prepare query")
-	}
-
-	records, err := prep.Query(user.ID, user.ID)
-	defer records.Close()
-
-	threadResult := Thread{}
-	results := []Thread{}
-
-	for records.Next() {
-		err := records.Scan(&threadResult.ID, &threadResult.FirstUserID, &threadResult.FirstUsername,
-			&threadResult.SecondUserID, &threadResult.SecondUsername, &threadResult.Updated, &threadResult.Created)
+// ChatThreadsByUser retrieves the thread a user has participated in
+func ChatThreadsByUser(db *sql.DB) RetrieveUserThreads {
+	return func(user User) ([]Thread, error) {
+		query := `SELECT DISTINCT * FROM Thread WHERE firstUserID = ? OR secondUserID = ?;`
+		prep, err := db.Prepare(query)
 		if err != nil {
-			return []Thread{}, errors.Wrap(err, "chat - could not scan thread record")
+			return []Thread{}, errors.Wrap(err, "chat - could not prepare query")
 		}
-		results = append(results, threadResult)
+
+		records, err := prep.Query(user.ID, user.ID)
+		defer records.Close()
+
+		threadResult := Thread{}
+		results := []Thread{}
+
+		for records.Next() {
+			err := records.Scan(&threadResult.ID, &threadResult.FirstUserID, &threadResult.FirstUsername,
+				&threadResult.SecondUserID, &threadResult.SecondUsername, &threadResult.Updated, &threadResult.Created)
+			if err != nil {
+				return []Thread{}, errors.Wrap(err, "chat - could not scan thread record")
+			}
+			results = append(results, threadResult)
+		}
+		return results, nil
 	}
-	return results, nil
 }
 
 // GetMessages retrieves a list of messages in a specific thread
-func GetMessages(db *sql.DB, threadID int) ([]Message, error) {
-	query := `SELECT * FROM ChatMessage WHERE thread = ?;`
-	prep, err := db.Prepare(query)
-	if err != nil {
-		return []Message{}, errors.Wrap(err, "chat - could not prepare query")
-	}
-
-	records, err := prep.Query(threadID)
-	defer records.Close()
-
-	msgs := []Message{}
-	aMsg := Message{}
-
-	for records.Next() {
-		err := records.Scan(&aMsg.ID, &aMsg.UserID, &aMsg.Username, &aMsg.Thread,
-			&aMsg.Chatmsg, &aMsg.InputTime)
+func GetMessages(db *sql.DB) RetrieveMessages {
+	return func(threadID int) ([]Message, error) {
+		query := `SELECT * FROM ChatMessage WHERE thread = ?;`
+		prep, err := db.Prepare(query)
 		if err != nil {
-			return []Message{}, errors.Wrap(err, "chat - could not scan thread record")
+			return []Message{}, errors.Wrap(err, "chat - could not prepare query")
 		}
-		msgs = append(msgs, aMsg)
+
+		records, err := prep.Query(threadID)
+		defer records.Close()
+
+		msgs := []Message{}
+		aMsg := Message{}
+
+		for records.Next() {
+			err := records.Scan(&aMsg.ID, &aMsg.UserID, &aMsg.Username, &aMsg.Thread,
+				&aMsg.Chatmsg, &aMsg.InputTime)
+			if err != nil {
+				return []Message{}, errors.Wrap(err, "chat - could not scan thread record")
+			}
+			msgs = append(msgs, aMsg)
+		}
+		return msgs, nil
 	}
-	return msgs, nil
 }

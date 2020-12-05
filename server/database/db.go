@@ -48,4 +48,10 @@ type RetrieveUserLoginDetailsFunc func(string) (User, error)
 type UpdateUserDetailsFunc func(User) error
 
 // AddUserToDBFunc provides the ability to save a user's details to the DB
-type AddUserToDBFunc func(user User) error
+type AddUserToDBFunc func(User) error
+
+// RetrieveUserThreads provides the ability to retrieve a user's thread from the DB
+type RetrieveUserThreads func(User) ([]Thread, error)
+
+// RetrieveMessages provides the functionality to retrieve messages in a thread
+type RetrieveMessages func(int) ([]Message, error)
