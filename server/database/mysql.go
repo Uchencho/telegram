@@ -11,8 +11,13 @@ import (
 )
 
 // AddRecordToUserTable adds a record to the db
-func AddRecordToUserTable(db *sql.DB) AddUserToDBFunc {
+func AddRecordToUserTable(dbinterface interface{}) AddUserToDBFunc {
 	return func(user User) error {
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return errors.New("Cannot use non sql type in this function")
+		}
+
 		query := `INSERT INTO Users (
 			email, hashed_password, date_joined, last_login, is_active, first_name,
 			phone_number, longitude, latitude, device_id
@@ -33,8 +38,13 @@ func AddRecordToUserTable(db *sql.DB) AddUserToDBFunc {
 }
 
 // GetUserLogin Queries the customer's entire details and updates the laast login field if customer exist, using db transactions
-func GetUserLogin(db *sql.DB) RetrieveUserLoginDetailsFunc {
+func GetUserLogin(dbinterface interface{}) RetrieveUserLoginDetailsFunc {
 	return func(email string) (User, error) {
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return User{}, errors.New("Cannot use non sql type in this function")
+		}
+
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {
@@ -93,8 +103,13 @@ func GetUserLogin(db *sql.DB) RetrieveUserLoginDetailsFunc {
 }
 
 // UpdateUserRecord updates the first name and phone number of a user
-func UpdateUserRecord(db *sql.DB) UpdateUserDetailsFunc {
+func UpdateUserRecord(dbinterface interface{}) UpdateUserDetailsFunc {
 	return func(user User) error {
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return errors.New("Cannot use non sql type in this function")
+		}
+
 		query := `UPDATE Users SET first_name = ?, phone_number = ? WHERE email = ?;`
 		prep, err := db.Prepare(query)
 		if err != nil {
@@ -109,8 +124,14 @@ func UpdateUserRecord(db *sql.DB) UpdateUserDetailsFunc {
 }
 
 // GetUser retrieves the user details for the auth Middleware
-func GetUser(db *sql.DB) RetrieveUserLoginDetailsFunc {
+func GetUser(dbinterface interface{}) RetrieveUserLoginDetailsFunc {
 	return func(email string) (User, error) {
+
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return User{}, errors.New("ONLY sql type allowed in this function")
+		}
+
 		query := `SELECT id, email, first_name, phone_number, user_address, 
 	is_active, date_joined, last_login, hashed_password FROM Users WHERE email = ?;`
 
@@ -144,8 +165,14 @@ func GetUser(db *sql.DB) RetrieveUserLoginDetailsFunc {
 }
 
 // ChatThreadsByUser retrieves the thread a user has participated in
-func ChatThreadsByUser(db *sql.DB) RetrieveUserThreadsFunc {
+func ChatThreadsByUser(dbinterface interface{}) RetrieveUserThreadsFunc {
 	return func(user User) ([]Thread, error) {
+
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return []Thread{}, errors.New("ONLY sql type allowed in this function")
+		}
+
 		query := `SELECT DISTINCT * FROM Thread WHERE firstUserID = ? OR secondUserID = ?;`
 		prep, err := db.Prepare(query)
 		if err != nil {
@@ -171,8 +198,14 @@ func ChatThreadsByUser(db *sql.DB) RetrieveUserThreadsFunc {
 }
 
 // GetMessages retrieves a list of messages in a specific thread
-func GetMessages(db *sql.DB) RetrieveMessagesFunc {
+func GetMessages(dbinterface interface{}) RetrieveMessagesFunc {
 	return func(threadID int) ([]Message, error) {
+
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return []Message{}, errors.New("ONLY sql type allowed in this function")
+		}
+
 		query := `SELECT * FROM ChatMessage WHERE thread = ?;`
 		prep, err := db.Prepare(query)
 		if err != nil {
@@ -198,8 +231,15 @@ func GetMessages(db *sql.DB) RetrieveMessagesFunc {
 }
 
 // StoreMessage inserts a message into the DB. Error checking is NOT properly handled
-func StoreMessage(db *sql.DB) InsertMessageFunc {
+func StoreMessage(dbinterface interface{}) InsertMessageFunc {
 	return func(msg Message) {
+
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			log.Println("ONLY sql type allowed in this function")
+			return
+		}
+
 		query := `INSERT INTO ChatMessage (
 			userID, username, thread, chatmsg
 		) VALUES (
@@ -219,8 +259,14 @@ func StoreMessage(db *sql.DB) InsertMessageFunc {
 }
 
 // GetOrCreateThread retrieves a thread from the DB or creates one
-func GetOrCreateThread(db *sql.DB) GetorCreateThreadFunc {
+func GetOrCreateThread(dbinterface interface{}) GetorCreateThreadFunc {
 	return func(thread Thread) (threadID int, err error) {
+
+		db, ok := dbinterface.(*sql.DB)
+		if !ok {
+			return 0, errors.New("ONLY sql type aloowed with this function")
+		}
+
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {

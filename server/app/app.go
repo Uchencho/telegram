@@ -1,7 +1,6 @@
 package app
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/Uchencho/telegram/server/account"
@@ -37,7 +36,7 @@ type Option struct {
 }
 
 // NewApp returns a new application
-func NewApp(provideDB *sql.DB) App {
+func NewApp(provideDB interface{}) App {
 
 	o := Option{
 		GetUserLogin:      database.GetUserLogin(provideDB),
