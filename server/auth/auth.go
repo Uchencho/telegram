@@ -172,7 +172,7 @@ func CheckRefreshToken(refreshToken string) (interface{}, error) {
 }
 
 // BasicToken is a Middleware that checks if a token was passed
-func BasicToken(next http.Handler) http.Handler {
+func BasicToken(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -203,7 +203,7 @@ func BasicToken(next http.Handler) http.Handler {
 }
 
 // UserMiddleware is a Middleware that returns the details of the user
-func UserMiddleware(next http.Handler) http.Handler {
+func UserMiddleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -249,7 +249,7 @@ func UserMiddleware(next http.Handler) http.Handler {
 }
 
 // WebsocketAuthMiddleware retrieves the user details using authentication specific for websocket requests
-func WebsocketAuthMiddleware(next http.Handler) http.Handler {
+func WebsocketAuthMiddleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
