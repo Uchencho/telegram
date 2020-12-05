@@ -45,7 +45,7 @@ func main() {
 	}()
 	db.MigrateDB(db.Db)
 
-	a := app.NewApp()
+	a := app.NewApp(db.Db)
 
 	log.Println("Running on address: ", defaultServerAddress)
 	if err := http.ListenAndServe(defaultServerAddress, a.Handler()); err != http.ErrServerClosed {

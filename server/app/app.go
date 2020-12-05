@@ -1,13 +1,16 @@
 package app
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/Uchencho/telegram/server/account"
 	"github.com/Uchencho/telegram/server/auth"
 	"github.com/Uchencho/telegram/server/chat"
+	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/utils"
 	"github.com/Uchencho/telegram/server/ws"
+
 	"github.com/gorilla/mux"
 )
 
@@ -24,12 +27,26 @@ type App struct {
 	WebsocketHandler      http.HandlerFunc
 }
 
+// Option is a representation of configurable options for the app
+type Option struct {
+	GetUserLogin      database.RetrieveUserLoginDetailsFunc
+	UpdateUserDetails database.UpdateUserDetailsFunc
+	AddNewUser        database.AddUserToDBFunc
+}
+
 // NewApp returns a new application
-func NewApp() App {
-	regHandler := auth.BasicToken(http.HandlerFunc(account.Register))
-	loginHandler := auth.BasicToken(http.HandlerFunc(account.Login))
-	refreshT := account.RefreshToken
-	userProfileHandler := auth.UserMiddleware(http.HandlerFunc(account.UserProfile))
+func NewApp(provideDB *sql.DB) App {
+
+	o := Option{
+		GetUserLogin:      database.GetUserLogin(provideDB),
+		UpdateUserDetails: database.UpdateUserRecord(provideDB),
+		AddNewUser:        database.AddRecordToUserTable(provideDB),
+	}
+
+	regHandler := auth.BasicToken(http.HandlerFunc(account.Register(o.AddNewUser)))
+	loginHandler := auth.BasicToken(http.HandlerFunc(account.Login(o.GetUserLogin)))
+	refreshT := account.RefreshToken()
+	userProfileHandler := auth.UserMiddleware(http.HandlerFunc(account.UserProfile(o.UpdateUserDetails)))
 	chatHistoryHandler := auth.UserMiddleware(http.HandlerFunc(chat.History))
 	messageHistoryHandler := auth.UserMiddleware(http.HandlerFunc(chat.MessageHistory))
 	wsHandler := auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.WebSocketServer))
