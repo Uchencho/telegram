@@ -39,7 +39,7 @@ func Register(insertRecord database.AddUserToDBFunc) http.HandlerFunc {
 				utils.InvalidJSONResp(w, err)
 				return
 			}
-			user := auth.User{
+			user := database.User{
 				Email:      userPayload.Email,
 				DateJoined: time.Now(),
 				LastLogin:  time.Now(),
@@ -259,7 +259,7 @@ func UserProfile(updateUser database.UpdateUserDetailsFunc) http.HandlerFunc {
 
 		case http.MethodPut:
 
-			userProfile := auth.User{}
+			userProfile := database.User{}
 			userProfile.Email = user.Email
 			err := json.NewDecoder(req.Body).Decode(&userProfile)
 			if err != nil && err.Error() == "EOF" {

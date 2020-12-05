@@ -46,10 +46,10 @@ func NewApp(provideDB *sql.DB) App {
 	regHandler := auth.BasicToken(http.HandlerFunc(account.Register(o.AddNewUser)))
 	loginHandler := auth.BasicToken(http.HandlerFunc(account.Login(o.GetUserLogin)))
 	refreshT := account.RefreshToken()
-	userProfileHandler := auth.UserMiddleware(http.HandlerFunc(account.UserProfile(o.UpdateUserDetails)))
-	chatHistoryHandler := auth.UserMiddleware(http.HandlerFunc(chat.History))
-	messageHistoryHandler := auth.UserMiddleware(http.HandlerFunc(chat.MessageHistory))
-	wsHandler := auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.WebSocketServer))
+	userProfileHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(account.UserProfile(o.UpdateUserDetails)))
+	chatHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.History))
+	messageHistoryHandler := auth.UserMiddleware(o.GetUserLogin, http.HandlerFunc(chat.MessageHistory))
+	wsHandler := auth.WebsocketAuthMiddleware(o.GetUserLogin, http.HandlerFunc(ws.WebSocketServer))
 
 	return App{
 		RegisterHandler:       regHandler,
