@@ -10,30 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// RegisterUser is a representation of a request body to register a user
-type RegisterUser struct {
-	Email           string `json:"email" validate:"required,email"`
-	Password        string `json:"password" validate:"required"`
-	ConfirmPassword string `json:"confirm_password" validate:"eqfield=Password"`
-	DeviceID        string `json:"device_id,omitempty"`
-}
-
-// User is a representation of a user
-type User struct {
-	ID             uint      `json:"id"`
-	Email          string    `json:"email" validate:"required,email"`
-	HashedPassword string    `json:"password,omitempty"`
-	FirstName      string    `json:"first_name"`
-	PhoneNumber    string    `json:"phone_number"`
-	UserAddress    string    `json:"user_address"`
-	IsActive       bool      `json:"is_active"`
-	DateJoined     time.Time `json:"date_joined"`
-	LastLogin      time.Time `json:"last_login"`
-	Longitude      string    `json:"longitude"`
-	Latitude       string    `json:"latitude"`
-	DeviceID       string    `json:"device_id"`
-}
-
 // Key is a representation of the expected type to decode the context passed
 type Key string
 

@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/Uchencho/telegram/server/chat"
+	"github.com/Uchencho/telegram/server/database"
 	"github.com/pkg/errors"
 )
 
-func storeMessage(db *sql.DB, msg chat.Message) {
+func storeMessage(db *sql.DB, msg database.Message) {
 	query := `INSERT INTO ChatMessage (
 		userID, username, thread, chatmsg
 	) VALUES (
@@ -27,7 +27,7 @@ func storeMessage(db *sql.DB, msg chat.Message) {
 	}
 }
 
-func getOrCreateThread(db *sql.DB, thread chat.Thread) (threadID int, err error) {
+func getOrCreateThread(db *sql.DB, thread database.Thread) (threadID int, err error) {
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {

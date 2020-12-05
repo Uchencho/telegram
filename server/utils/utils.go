@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Uchencho/telegram/server/auth"
+	"github.com/Uchencho/telegram/server/database"
 	"github.com/go-playground/validator"
 )
 
@@ -93,12 +94,12 @@ func ValidateInput(object interface{}) (bool, error) {
 }
 
 // GetUserFromRequestContext retrieves the user details from the request context
-func GetUserFromRequestContext(w http.ResponseWriter, req *http.Request) auth.User {
+func GetUserFromRequestContext(w http.ResponseWriter, req *http.Request) database.User {
 	const userKey auth.Key = "user"
-	user, ok := req.Context().Value(userKey).(auth.User)
+	user, ok := req.Context().Value(userKey).(database.User)
 	if !ok {
 		InternalIssues(w, errors.New("Cannot decode user details from middleware"))
-		return auth.User{}
+		return database.User{}
 	}
 	return user
 }

@@ -20,6 +20,27 @@ type User struct {
 	DeviceID       string    `json:"device_id"`
 }
 
+// Thread is a representation of a thread stored in the db
+type Thread struct {
+	ID             int        `json:"id,omitempty" validate:"required"`
+	FirstUserID    int        `json:"first_user_id,omitempty"`
+	FirstUsername  string     `json:"first_username,omitempty"`
+	SecondUserID   int        `json:"second_user_id,omitempty"`
+	SecondUsername string     `json:"second_username,omitempty"`
+	Updated        *time.Time `json:"updated,omitempty"`
+	Created        *time.Time `json:"created,omitempty"`
+}
+
+// Message is a representation of a stored message in the DB
+type Message struct {
+	ID        int        `json:"id,omitempty"`
+	Thread    int        `json:"thread,omitempty"`
+	UserID    int        `json:"user_id,omitempty"`
+	Username  string     `json:"user_name,omitempty"`
+	Chatmsg   string     `json:"message,omitempty"`
+	InputTime *time.Time `json:"input_time,omitempty"`
+}
+
 // RetrieveUserLoginDetailsFunc returns the ability to retrieve a user's details from the database
 type RetrieveUserLoginDetailsFunc func(string) (User, error)
 

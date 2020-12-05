@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Uchencho/telegram/db"
+	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/utils"
 )
 
@@ -15,7 +16,7 @@ func History(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Method {
 	case http.MethodGet:
-		threads, err := chatThreadsByUser(db.Db, user)
+		threads, err := database.ChatThreadsByUser(db.Db, user)
 		if err != nil {
 			utils.InternalIssues(w, err)
 			return
@@ -25,7 +26,7 @@ func History(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if len(threads) == 0 {
-			resp.Data = []Thread{}
+			resp.Data = []database.Thread{}
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
 				utils.InternalIssues(w, err)
@@ -55,7 +56,7 @@ func MessageHistory(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 
-		threadPayload := Thread{}
+		threadPayload := database.Thread{}
 		err := json.NewDecoder(req.Body).Decode(&threadPayload)
 		if err != nil {
 			utils.InvalidJSONResp(w, err)
@@ -67,7 +68,7 @@ func MessageHistory(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		chatList, err := getMessages(db.Db, threadPayload.ID)
+		chatList, err := database.GetMessages(db.Db, threadPayload.ID)
 		if err != nil {
 			utils.InternalIssues(w, err)
 			return
@@ -77,7 +78,7 @@ func MessageHistory(w http.ResponseWriter, req *http.Request) {
 			Message: "success",
 		}
 		if len(chatList) == 0 {
-			resp.Data = []Message{}
+			resp.Data = []database.Message{}
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
 				utils.InternalIssues(w, err)

@@ -19,7 +19,7 @@ func Register(insertRecord database.AddUserToDBFunc) http.HandlerFunc {
 		case http.MethodPost:
 
 			var (
-				userPayload auth.RegisterUser
+				userPayload RegisterUser
 				err         error
 			)
 

@@ -29,3 +29,11 @@ type loginResponse struct {
 	AccessToken  string    `json:"access_token,omitempty"`
 	RefreshToken string    `json:"refresh_token,omitempty"`
 }
+
+// RegisterUser is a representation of a request body to register a user
+type RegisterUser struct {
+	Email           string `json:"email" validate:"required,email"`
+	Password        string `json:"password" validate:"required"`
+	ConfirmPassword string `json:"confirm_password" validate:"eqfield=Password"`
+	DeviceID        string `json:"device_id,omitempty"`
+}

@@ -11,8 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/Uchencho/telegram/db"
-	"github.com/Uchencho/telegram/server/auth"
-	"github.com/Uchencho/telegram/server/chat"
+	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/utils"
 )
 
@@ -43,7 +42,7 @@ func (c *WClient) putMsgInRoom() {
 			w.Write(pl.message)
 
 			// Write to DB to store the chat
-			msg := chat.Message{
+			msg := database.Message{
 				UserID:   pl.sender.userID,
 				Username: pl.sender.userName,
 				Thread:   c.Thread,
@@ -72,7 +71,7 @@ func (c *WClient) putMsgInRoom() {
 	}
 }
 
-func (c *WClient) readMsgFromRoom(roomName string, user auth.User) {
+func (c *WClient) readMsgFromRoom(roomName string, user database.User) {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
@@ -127,7 +126,7 @@ func WebSocketServer(w http.ResponseWriter, req *http.Request) {
 	// Get or create room for two users to communicate
 	roomName := getRoomName(int(user.ID), secondUserID)
 
-	threadInput := chat.Thread{
+	threadInput := database.Thread{
 		FirstUserID:    int(user.ID),
 		FirstUsername:  user.FirstName,
 		SecondUserID:   secondUserID,
