@@ -79,3 +79,12 @@ func SetTestStandardHeaders(r *http.Request) {
 		log.Fatal(err)
 	}
 }
+
+// GetResponseBody returns the unmarshalled response body
+func GetResponseBody(res *http.Response, responseBody interface{}) {
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	json.Unmarshal(body, responseBody)
+}

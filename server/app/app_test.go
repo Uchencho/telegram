@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"path/filepath"
 	"testing"
@@ -52,18 +50,14 @@ func TestRegisterSuccess(t *testing.T) {
 	testutils.SetTestStandardHeaders(req)
 
 	res, _ := http.DefaultClient.Do(req)
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	json.Unmarshal(body, &responseBody)
+	testutils.GetResponseBody(res, responseBody)
 
 	testutils.FileToStruct(filepath.Join("test_data", "register_response.json"), &expectedResp)
 
 	t.Run("HTTP response status is 200", func(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
-	t.Run("Response is as expected", func(t *testing.T) {
+	t.Run("Response body is as expected", func(t *testing.T) {
 		assert.Equal(t, expectedResp, responseBody)
 	})
 }
