@@ -1,8 +1,15 @@
 package testutils
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4/database"
@@ -10,6 +17,10 @@ import (
 
 	// Sqlite3
 	_ "github.com/mattn/go-sqlite3"
+)
+
+const (
+	basicToken = "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b"
 )
 
 // CreateDB returns an sqlite db for testing
@@ -43,5 +54,28 @@ func DropDB() {
 	err := os.Remove("test_database.db")
 	if err != nil {
 		log.Println("File does not exist")
+	}
+}
+
+// FileToStruct unmarshals a json file into s truct
+func FileToStruct(filepath string, s interface{}) io.Reader {
+	bb, _ := ioutil.ReadFile(filepath)
+	json.Unmarshal(bb, s)
+	return bytes.NewReader(bb)
+}
+
+// NewTestServer creates a test server for testing
+func NewTestServer(h http.HandlerFunc) (string, func()) {
+	ts := httptest.NewServer(h)
+	return ts.URL, func() { ts.Close() }
+}
+
+// SetTestStandardHeaders sets standard headers for testing
+func SetTestStandardHeaders(r *http.Request) {
+	h := r.Header
+	h["Authorization"] = []string{fmt.Sprintf("Bearer %s", basicToken)}
+	err := os.Setenv("BASIC_TOKEN", "6cf457aafeb3128c99fd3d0d8267a9a9462cecfe58d80460be67aa059c9cdb9b")
+	if err != nil {
+		log.Fatal(err)
 	}
 }

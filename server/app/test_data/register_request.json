@@ -1,0 +1,6 @@
+{
+  "email": "test@gmail.com",
+  "password": "testPassword",
+  "confirm_password": "testPassword",
+  "device_id": "random_id"
+}
