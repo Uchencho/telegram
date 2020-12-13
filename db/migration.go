@@ -15,6 +15,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+const migrationDirectory = "telegram/db/migration/"
+
 // MigrateDB helps apply migrations to a database
 func MigrateDB(db *sql.DB, driver database.Driver, dbType string) {
 
@@ -22,7 +24,7 @@ func MigrateDB(db *sql.DB, driver database.Driver, dbType string) {
 	if err != nil {
 		log.Println(err)
 	}
-	migDir := strings.Split(currentDir, "telegram")[0] + "telegram/db/migration/"
+	migDir := strings.Split(currentDir, "telegram")[0] + migrationDirectory
 
 	var migrationDir = flag.String("migration files", migDir, "Directory where the migration file exists")
 	flag.Parse()

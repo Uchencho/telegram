@@ -1,12 +1,14 @@
 package ws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/Uchencho/commons/alert"
 	"github.com/gorilla/websocket"
 )
 
@@ -131,6 +133,10 @@ func cleanRoomAndClients(roomName string, c *WClient) {
 	clients, found := roomAndClients[roomName]
 	if !found {
 		log.Println("Room does not exist... This should never happen by the way")
+
+		// Notify via slack that something went wrong
+		s := alert.SlackErrorNotifier("Telegram")
+		go s("Room does not exist", errors.New("Room does not exist... This should never happen by the way"))
 		return
 	}
 

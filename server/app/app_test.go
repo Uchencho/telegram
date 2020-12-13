@@ -134,20 +134,16 @@ func TestLoginFailure(t *testing.T) {
 	})
 }
 
-func TestSucessWebsocketHandler(t *testing.T) {
+func TestSucessSendMessageThroughWebsocket(t *testing.T) {
 
 	var (
 		requestBody  account.LoginInfo
-		expectedResp utils.GenericResponse
 		responseBody utils.GenericResponse
 	)
 
 	getLogin := func(u string) (database.User, error) {
 		hashedPass, _ := auth.HashPassword(requestBody.Password)
-		return database.User{ID: 1,
-			Email:          requestBody.Email,
-			HashedPassword: hashedPass,
-		}, nil
+		return database.User{Email: requestBody.Email, HashedPassword: hashedPass}, nil
 	}
 	storeMessage := func(m database.Message) {}
 	getThread := func(t database.Thread) (int, error) { return 1, nil }
@@ -172,21 +168,11 @@ func TestSucessWebsocketHandler(t *testing.T) {
 	url, closeServer := testutils.NewTestServer(TestApp.Handler())
 	defer closeServer()
 
-	testutils.FileToStruct(filepath.Join("test_data", "login_request.json"), &requestBody)
-	jsonBody, _ := json.Marshal(requestBody)
-
-	reqOne, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%v/api/login", url), bytes.NewBuffer(jsonBody))
-	testutils.SetTestStandardHeaders(reqOne)
-
-	resOne, _ := http.DefaultClient.Do(reqOne)
-
-	testutils.GetResponseBody(resOne, &expectedResp)
-	lr, _ := expectedResp.Data.(map[string]interface{})
-
+	access_token, _, _ := auth.GenerateToken("test@gmail.com")
 	u := "ws" + strings.TrimPrefix(url, "http")
 
 	ws, res, _ := websocket.DefaultDialer.Dial(fmt.Sprintf("%v/ws?token=%v&receiver_username=%s&receiver_id=%v",
-		u, lr["access_token"], "test", 2), nil)
+		u, access_token, "test", 2), nil)
 	defer ws.Close()
 
 	testutils.GetResponseBody(res, &responseBody)
