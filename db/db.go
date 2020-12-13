@@ -11,9 +11,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// RetrieveUserDetailsFunc
-// type RetrieveUserDetailsFunc func(db *sql.DB, email string) (auth.User, error)
-
 func databaseURL() string {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("No .env file found, with error: %v", err)

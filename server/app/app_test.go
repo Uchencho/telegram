@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Uchencho/telegram/db"
@@ -17,6 +17,7 @@ import (
 	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/testutils"
 	"github.com/Uchencho/telegram/server/utils"
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +31,6 @@ func setupTestEnv() (string, *sql.DB, func()) {
 	TestApp := app.NewApp(sqliteForTest)
 	url, closeServer := testutils.NewTestServer(TestApp.Handler())
 	return url, sqliteForTest, closeServer
-
 }
 
 func TestRegisterSuccess(t *testing.T) {
@@ -56,16 +56,11 @@ func TestRegisterSuccess(t *testing.T) {
 	res, _ := http.DefaultClient.Do(req)
 	testutils.GetResponseBody(res, &responseBody)
 
-	log.Println(responseBody)
-
 	testutils.FileToStruct(filepath.Join("test_data", "register_response.json"), &expectedResp)
 
 	t.Run("HTTP response status is 200", func(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
-	// t.Run("Response body is as expected", func(t *testing.T) {
-	// 	assert.Equal(t, expectedResp, responseBody)
-	// })
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -136,5 +131,68 @@ func TestLoginFailure(t *testing.T) {
 	})
 	t.Run("Incorrect Password error", func(t *testing.T) {
 		assert.Equal(t, utils.GenericResponse{Error: "Email/Password is incorrect"}, responseBody)
+	})
+}
+
+func TestSucessWebsocketHandler(t *testing.T) {
+
+	var (
+		requestBody  account.LoginInfo
+		expectedResp utils.GenericResponse
+		responseBody utils.GenericResponse
+	)
+
+	getLogin := func(u string) (database.User, error) {
+		hashedPass, _ := auth.HashPassword(requestBody.Password)
+		return database.User{ID: 1,
+			Email:          requestBody.Email,
+			HashedPassword: hashedPass,
+		}, nil
+	}
+	storeMessage := func(m database.Message) {}
+	getThread := func(t database.Thread) (int, error) { return 1, nil }
+
+	getLoginOption := func(oa *app.Option) {
+		oa.GetUserLogin = getLogin
+	}
+	storeMessageOption := func(oa *app.Option) {
+		oa.InsertMsg = storeMessage
+	}
+	getThreadOption := func(oa *app.Option) {
+		oa.GetThread = getThread
+	}
+
+	opts := []app.Options{
+		getLoginOption,
+		storeMessageOption,
+		getThreadOption,
+	}
+
+	TestApp := app.NewApp("", opts...)
+	url, closeServer := testutils.NewTestServer(TestApp.Handler())
+	defer closeServer()
+
+	testutils.FileToStruct(filepath.Join("test_data", "login_request.json"), &requestBody)
+	jsonBody, _ := json.Marshal(requestBody)
+
+	reqOne, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%v/api/login", url), bytes.NewBuffer(jsonBody))
+	testutils.SetTestStandardHeaders(reqOne)
+
+	resOne, _ := http.DefaultClient.Do(reqOne)
+
+	testutils.GetResponseBody(resOne, &expectedResp)
+	lr, _ := expectedResp.Data.(map[string]interface{})
+
+	u := "ws" + strings.TrimPrefix(url, "http")
+
+	ws, res, _ := websocket.DefaultDialer.Dial(fmt.Sprintf("%v/ws?token=%v&receiver_username=%s&receiver_id=%v",
+		u, lr["access_token"], "test", 2), nil)
+	defer ws.Close()
+
+	testutils.GetResponseBody(res, &responseBody)
+
+	t.Run("Able to send message successfully", func(t *testing.T) {
+		err := ws.WriteMessage(websocket.TextMessage, []byte("hello"))
+		assert.NoError(t, err)
 	})
 }

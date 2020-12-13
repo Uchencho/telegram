@@ -65,7 +65,7 @@ func Register(insertRecord database.AddUserToDBFunc) http.HandlerFunc {
 				return
 			}
 
-			logRes := loginResponse{
+			logRes := LoginResponse{
 				ID:           user.ID,
 				Email:        user.Email,
 				FirstName:    user.FirstName,
@@ -135,7 +135,7 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 				return
 			}
 
-			logRes := loginResponse{
+			logRes := LoginResponse{
 				ID:           customer.ID,
 				Email:        customer.Email,
 				FirstName:    customer.FirstName,
@@ -231,7 +231,7 @@ func UserProfile(updateUser database.UpdateUserDetailsFunc) http.HandlerFunc {
 		switch req.Method {
 		case http.MethodGet:
 
-			data := loginResponse{
+			data := LoginResponse{
 				ID:          user.ID,
 				Email:       user.Email,
 				FirstName:   user.FirstName,

@@ -18,7 +18,8 @@ type accessT struct {
 	AccessToken string `json:"access_token"`
 }
 
-type loginResponse struct {
+// LoginResponse is a representation of a login response
+type LoginResponse struct {
 	ID           uint      `json:"id,omitempty"`
 	Email        string    `json:"email"`
 	FirstName    string    `json:"first_name"`
