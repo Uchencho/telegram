@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
@@ -16,8 +18,13 @@ import (
 // MigrateDB helps apply migrations to a database
 func MigrateDB(db *sql.DB, driver database.Driver, dbType string) {
 
-	var migrationDir = flag.String("migration files", "./db/migration/",
-		"Directory where the migration file exists")
+	currentDir, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	migDir := strings.Split(currentDir, "telegram")[0] + "telegram/db/migration/"
+
+	var migrationDir = flag.String("migration files", migDir, "Directory where the migration file exists")
 	flag.Parse()
 
 	m, err := migrate.NewWithDatabaseInstance(

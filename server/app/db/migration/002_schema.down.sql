@@ -1,3 +1,0 @@
-DROP TABLE IF EXISTS Thread;
-
-DROP TABLE IF EXISTS ChatMessage;
