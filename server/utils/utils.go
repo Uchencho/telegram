@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -17,8 +18,8 @@ var (
 	validate = validator.New()
 )
 
-// SuccessResponse is a representation of a successful response
-type SuccessResponse struct {
+// GenericResponse is a representation of a successful response
+type GenericResponse struct {
 	Error   string      `json:"error"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
@@ -26,28 +27,46 @@ type SuccessResponse struct {
 
 // InvalidJSONResp is a representation of invalid json error
 func InvalidJSONResp(w http.ResponseWriter, err error) {
-	log.Printf("error in decoding json: %v", err)
 	w.WriteHeader(http.StatusBadRequest)
-	fmt.Fprintf(w, `{"error" : "%s"}`, err.Error())
+	res := GenericResponse{Error: fmt.Sprintf("error in decoding json: %s", err.Error())}
+	jsonResp, err := json.Marshal(res)
+	if err != nil {
+		InternalIssues(w, err)
+	}
+	fmt.Fprint(w, string(jsonResp))
 }
 
 // MethodNotAllowedResponse indicates when a request method is not allowed
 func MethodNotAllowedResponse(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	fmt.Fprint(w, `{"message" : "Method Not allowed"}`)
+	res := GenericResponse{Error: "Method Not allowed"}
+	jsonResp, err := json.Marshal(res)
+	if err != nil {
+		InternalIssues(w, err)
+	}
+	fmt.Fprint(w, string(jsonResp))
 }
 
 // InternalIssues denotes an internal unwxpected issue occured
 func InternalIssues(w http.ResponseWriter, err error) {
-	log.Println("\n\n", err)
 	w.WriteHeader(http.StatusInternalServerError)
-	fmt.Fprint(w, `{"error" : "Something went wrong"}`)
+	res := GenericResponse{Error: "Something went wrong"}
+	jsonResp, err := json.Marshal(res)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Fprint(w, string(jsonResp))
 }
 
 // NotAvailabe is a handler that handles invalid urls
 func NotAvailabe(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, `{"error" : "Resource not found"}`)
+	res := GenericResponse{Error: "Resource not found"}
+	jsonResp, err := json.Marshal(res)
+	if err != nil {
+		InternalIssues(w, err)
+	}
+	fmt.Fprint(w, string(jsonResp))
 }
 
 // ValidateInput validates the input struct
@@ -103,4 +122,15 @@ func GetUserFromRequestContext(w http.ResponseWriter, req *http.Request) databas
 		return database.User{}
 	}
 	return user
+}
+
+// BadRequest indicates when a bad request occurs
+func BadRequest(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusBadRequest)
+	res := GenericResponse{Error: err.Error()}
+	jsonResp, err := json.Marshal(res)
+	if err != nil {
+		InternalIssues(w, err)
+	}
+	fmt.Fprint(w, string(jsonResp))
 }

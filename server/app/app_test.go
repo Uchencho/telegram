@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"testing"
@@ -31,13 +32,14 @@ func setupTestEnv() (string, *sql.DB, func()) {
 	return url, sqliteForTest, closeServer
 
 }
+
 func TestRegisterSuccess(t *testing.T) {
 	defer testutils.DropDB()
 
 	var (
 		requestBody  account.RegisterUser
-		expectedResp utils.SuccessResponse
-		responseBody utils.SuccessResponse
+		expectedResp utils.GenericResponse
+		responseBody utils.GenericResponse
 	)
 
 	url, sqliteDB, closeServer := setupTestEnv()
@@ -52,7 +54,9 @@ func TestRegisterSuccess(t *testing.T) {
 	testutils.SetTestStandardHeaders(req)
 
 	res, _ := http.DefaultClient.Do(req)
-	testutils.GetResponseBody(res, responseBody)
+	testutils.GetResponseBody(res, &responseBody)
+
+	log.Println(responseBody)
 
 	testutils.FileToStruct(filepath.Join("test_data", "register_response.json"), &expectedResp)
 
@@ -94,5 +98,43 @@ func TestLoginSuccess(t *testing.T) {
 
 	t.Run("HTTP response status is 200", func(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
+	})
+}
+
+func TestLoginFailure(t *testing.T) {
+	var (
+		requestBody  account.LoginInfo
+		responseBody utils.GenericResponse
+	)
+
+	getLogin := func(u string) (database.User, error) {
+		return database.User{}, nil
+	}
+
+	getLoginOption := func(oa *app.Option) {
+		oa.GetUserLogin = getLogin
+	}
+	opts := []app.Options{
+		getLoginOption,
+	}
+
+	TestApp := app.NewApp("", opts...)
+	url, closeServer := testutils.NewTestServer(TestApp.Handler())
+	defer closeServer()
+
+	testutils.FileToStruct(filepath.Join("test_data", "login_request.json"), &requestBody)
+
+	jsonBody, _ := json.Marshal(requestBody)
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%v/api/login", url), bytes.NewBuffer(jsonBody))
+	testutils.SetTestStandardHeaders(req)
+
+	res, _ := http.DefaultClient.Do(req)
+	testutils.GetResponseBody(res, &responseBody)
+
+	t.Run("HTTP response status is 400", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	})
+	t.Run("Incorrect Password error", func(t *testing.T) {
+		assert.Equal(t, utils.GenericResponse{Error: "Email/Password is incorrect"}, responseBody)
 	})
 }

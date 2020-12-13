@@ -21,7 +21,7 @@ func History(getThreads database.RetrieveUserThreadsFunc) http.HandlerFunc {
 				utils.InternalIssues(w, err)
 				return
 			}
-			resp := utils.SuccessResponse{
+			resp := utils.GenericResponse{
 				Message: "success",
 			}
 
@@ -75,7 +75,7 @@ func MessageHistory(getMessages database.RetrieveMessagesFunc) http.HandlerFunc 
 				return
 			}
 
-			resp := utils.SuccessResponse{
+			resp := utils.GenericResponse{
 				Message: "success",
 			}
 			if len(chatList) == 0 {

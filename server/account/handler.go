@@ -31,8 +31,7 @@ func Register(insertRecord database.AddUserToDBFunc) http.HandlerFunc {
 
 			aboveOneField, err := utils.ValidateInput(userPayload)
 			if aboveOneField {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, `{"error" : "Invalid Payload"}`)
+				utils.BadRequest(w, errors.New("Invalid Payload"))
 				return
 			}
 			if err != nil {
@@ -75,7 +74,7 @@ func Register(insertRecord database.AddUserToDBFunc) http.HandlerFunc {
 				AccessToken:  accessToken,
 				RefreshToken: refreshToken,
 			}
-			successResp := utils.SuccessResponse{
+			successResp := utils.GenericResponse{
 				Message: "success",
 				Data:    logRes,
 			}
@@ -109,8 +108,7 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 			}
 			aboveOneField, err := utils.ValidateInput(loginDetails)
 			if aboveOneField {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, `{"error" : "Invalid Payload"}`)
+				utils.BadRequest(w, errors.New("Invalid Payload"))
 				return
 			}
 			if err != nil {
@@ -120,15 +118,13 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 
 			customer, err := getLoginDetails(loginDetails.Email)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, `{"error" : "User does not exist"}`)
+				utils.BadRequest(w, errors.New("User does not exist"))
 				return
 			}
 
 			err = auth.CheckPasswordHash(loginDetails.Password, customer.HashedPassword)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, `{"error" : "Email/Password is incorrect"}`)
+				utils.BadRequest(w, errors.New("Email/Password is incorrect"))
 				return
 			}
 
@@ -148,7 +144,7 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 				AccessToken:  accessToken,
 				RefreshToken: refreshToken,
 			}
-			successResp := utils.SuccessResponse{
+			successResp := utils.GenericResponse{
 				Message: "success",
 				Data:    logRes,
 			}
@@ -191,8 +187,7 @@ func RefreshToken() http.HandlerFunc {
 
 			email, err := auth.CheckRefreshToken(refreshToken.RefreshToken)
 			if err != nil && "Token is expired" == err.Error() {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, `{"error" : "Token has expired, please login"}`)
+				utils.BadRequest(w, errors.New("Token has expired, please login"))
 				return
 			} else if err != nil {
 				auth.UnauthorizedResponse(w)
@@ -206,7 +201,7 @@ func RefreshToken() http.HandlerFunc {
 			}
 
 			data := accessT{AccessToken: accessToken}
-			resp := utils.SuccessResponse{
+			resp := utils.GenericResponse{
 				Message: "success",
 				Data:    data,
 			}
@@ -245,7 +240,7 @@ func UserProfile(updateUser database.UpdateUserDetailsFunc) http.HandlerFunc {
 				DateJoined:  user.DateJoined,
 				LastLogin:   user.LastLogin,
 			}
-			successR := utils.SuccessResponse{
+			successR := utils.GenericResponse{
 				Message: "success",
 				Data:    data,
 			}
@@ -290,7 +285,7 @@ func UserProfile(updateUser database.UpdateUserDetailsFunc) http.HandlerFunc {
 			user.UserAddress = userProfile.UserAddress
 			user.PhoneNumber = userProfile.PhoneNumber
 			user.HashedPassword = ""
-			resp := utils.SuccessResponse{
+			resp := utils.GenericResponse{
 				Message: "success",
 				Data:    user,
 			}
