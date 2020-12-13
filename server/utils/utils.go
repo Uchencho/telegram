@@ -19,6 +19,7 @@ var (
 
 // SuccessResponse is a representation of a successful response
 type SuccessResponse struct {
+	Error   string      `json:"error"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }

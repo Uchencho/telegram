@@ -100,7 +100,7 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 		switch req.Method {
 		case http.MethodPost:
 
-			var loginDetails loginInfo
+			var loginDetails LoginInfo
 
 			err := json.NewDecoder(req.Body).Decode(&loginDetails)
 			if err != nil {

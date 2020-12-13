@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-type loginInfo struct {
+// LoginInfo represents the functionality of a login information
+type LoginInfo struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
