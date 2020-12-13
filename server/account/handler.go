@@ -2,7 +2,6 @@ package account
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,6 +9,8 @@ import (
 	"github.com/Uchencho/telegram/server/auth"
 	"github.com/Uchencho/telegram/server/database"
 	"github.com/Uchencho/telegram/server/utils"
+
+	"github.com/pkg/errors"
 )
 
 // Register User endppoint
@@ -118,7 +119,7 @@ func Login(getLoginDetails database.RetrieveUserLoginDetailsFunc) http.HandlerFu
 
 			customer, err := getLoginDetails(loginDetails.Email)
 			if err != nil {
-				utils.BadRequest(w, errors.New("User does not exist"))
+				utils.BadRequest(w, errors.New("Email/Password is incorrect"))
 				return
 			}
 

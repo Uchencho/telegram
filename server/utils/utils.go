@@ -20,9 +20,9 @@ var (
 
 // GenericResponse is a representation of a successful response
 type GenericResponse struct {
-	Error   string      `json:"error"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // InvalidJSONResp is a representation of invalid json error
