@@ -1,18 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Uchencho/telegram/db"
-	"github.com/Uchencho/telegram/server/account"
-	"github.com/Uchencho/telegram/server/auth"
-	"github.com/Uchencho/telegram/server/chat"
-	"github.com/Uchencho/telegram/server/utils"
-	"github.com/Uchencho/telegram/server/ws"
-	"github.com/gorilla/mux"
+	"github.com/Uchencho/telegram/server/app"
 
+	"github.com/golang-migrate/migrate/v4/database/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -42,32 +40,30 @@ func init() {
 	}
 }
 
+func inititeMYSQL() *sql.DB {
+	mySQL := db.ConnectDatabase()
+	driver, err := mysql.WithInstance(mySQL, &mysql.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect with error %s", err)
+	}
+
+	currentDB := os.Getenv("DB_NAME")
+	db.MigrateDB(mySQL, driver, currentDB)
+	return mySQL
+}
+
 func main() {
 
+	mySQL := inititeMYSQL()
 	defer func() {
-		db.Db.Close()
+		mySQL.Close()
 		fmt.Println("Db closed")
 	}()
-	db.MigrateDB(db.Db)
 
-	router := mux.NewRouter()
-	router.NotFoundHandler = auth.BasicToken(http.HandlerFunc(utils.NotAvailabe))
-
-	router.HandleFunc("/", serveHome)
-	router.Handle("/api/register", auth.BasicToken(http.HandlerFunc(account.Register)))
-	router.Handle("/api/login", auth.BasicToken(http.HandlerFunc(account.Login)))
-	router.HandleFunc("/api/refresh", account.RefreshToken)
-	router.Handle("/api/profile", auth.UserMiddleware(http.HandlerFunc(account.UserProfile)))
-
-	// Chat
-	router.Handle("/api/chat/history", auth.UserMiddleware(http.HandlerFunc(chat.History)))
-	router.Handle("/api/chat/history/messages", auth.UserMiddleware(http.HandlerFunc(chat.MessageHistory)))
-
-	// Websocket
-	router.Handle("/ws", auth.WebsocketAuthMiddleware(http.HandlerFunc(ws.WebSocketServer)))
+	a := app.NewApp(mySQL)
 
 	log.Println("Running on address: ", defaultServerAddress)
-	if err := http.ListenAndServe(defaultServerAddress, router); err != http.ErrServerClosed {
+	if err := http.ListenAndServe(defaultServerAddress, a.Handler()); err != http.ErrServerClosed {
 		log.Println(err)
 	}
 }

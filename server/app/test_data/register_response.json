@@ -1,0 +1,13 @@
+{
+  "message": "success",
+  "data": {
+    "id": 1,
+    "email": "test@gmail.com",
+    "first_name": "",
+    "phone_number": "",
+    "user_address": "",
+    "is_active": true,
+    "date_joined": "2020-12-11T16:49:42.820304+01:00",
+    "last_login": "2020-12-11T16:49:42.820304+01:00"
+  }
+}

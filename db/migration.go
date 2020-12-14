@@ -5,28 +5,32 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
+	"github.com/golang-migrate/migrate/v4/database"
 
 	// Needed
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-// MigrateDB helps apply migrations to a database
-func MigrateDB(db *sql.DB) {
+const migrationDirectory = "telegram/db/migration/"
 
-	var migrationDir = flag.String("migration files", "./db/migration/",
-		"Directory where the migration file exists")
+// MigrateDB helps apply migrations to a database
+func MigrateDB(db *sql.DB, driver database.Driver, dbType string) {
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	migDir := strings.Split(currentDir, "telegram")[0] + migrationDirectory
+
+	var migrationDir = flag.String("migration files", migDir, "Directory where the migration file exists")
 	flag.Parse()
 
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
-	if err != nil {
-		log.Fatalf("Failed to connect with error %s", err)
-	}
-
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", *migrationDir), "mysql", driver,
+		fmt.Sprintf("file://%s", *migrationDir), dbType, driver,
 	)
 	if err != nil {
 		log.Fatalf("Error encountered in creating new db instance, %v", err)
